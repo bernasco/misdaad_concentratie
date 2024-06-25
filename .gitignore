@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 data/geo/wijkbuurtkaart_2023_v1.zip
-wijkenbuurten_2023_v1.gpkg
+data/geo/buurten_2023_v1.shp
+data/geo/wijkenbuurten_2023_v1.gpkg
 

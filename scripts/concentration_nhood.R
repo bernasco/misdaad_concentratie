@@ -5,6 +5,7 @@ for(pkg_name_chr in c("here",             # local file references
                       "tidyverse",        # data manipulation
                       "cbsodataR",        # CBS data API interface 
                       "DescTools",        # Gini
+                      "patchwork",        # Combine ggplots
                       "remotes",          # install from outside CRAN
                       "sf")) {            # spatial stuff
   if(!require(pkg_name_chr, character.only = TRUE)) {
@@ -35,6 +36,8 @@ map(c(DATA,  DATA_POPULATION, DATA_CRIME, DATA_GEO, DATA_WORK, OUTPUT),
 
 # Define constants and settings ------------------------------------------------
 set.seed(12345)
+CRIME_COLOR <- "purple"
+POP_COLOR <- "pink"
 
 # Define ggplot printing functions ---------------------------------------------
 
@@ -163,36 +166,54 @@ geometry_municipalities_sf <-
   mutate(municipality_id = trimws(substring(GM_CODE, 3, 6)))
 
 
-# merge crime and population data 
+# merge crime and population data ----------------------------------------------
 crime_population_nhoods_df <-
   dplyr::inner_join(crime_2023_df, population_2023_df, by = "nhood_id") 
 
-# Calculate correlation between population and crime (neighborhood-level)
-crime_population_nhoods_df |>
-  dplyr::select(crime, population) |>
-  cor()
-
-# Scatterplot crime and population (neighborhood-level)
-crime_population_nhoods_df  |>
-  ggplot() +
-  geom_point(aes(x= population, y = crime), size = .5) +
-  xlab("Bevolking") + 
-  ylab("Geregistreerde misdrijven")
+# describe crime and population at neighborhood level
 
 # histogram of neighborhood population
-crime_population_nhoods_df |> 
+population_histogram_nhoods_ggp <-
+  crime_population_nhoods_df |> 
   ggplot() + 
   geom_histogram(aes(x = population), color = "black", fill = "darkgreen") +
   xlab("Aantal inwoners") +
-  ylab("Aantal buurten")
+  ylab("Aantal buurten") +
+  ggtitle("Aantal inwoners per buurt")
+population_histogram_nhoods_ggp
+ggsave_svg(ggp = population_histogram_nhoods_ggp, output = OUTPUT)
+
 
 # histogram of neighborhood crime
-crime_population_nhoods_df |> 
+crime_histogram_nhoods_ggp <-
+  crime_population_nhoods_df |> 
   ggplot() + 
   geom_histogram(aes(x = crime), color = "black", fill = "orange")  +
   xlab("Aantal inwoners") +
-  ylab("Aantal geregistreerde misdrijven")
+  ylab("Aantal geregistreerde misdrijven") +
+  ggtitle("Aantal misdrijven per buurt") 
+crime_histogram_nhoods_ggp
+ggsave_svg(ggp = crime_histogram_nhoods_ggp, output = OUTPUT)
 
+# Calculate correlation between population and crime (neighborhood-level)
+crime_population_nhoods_cor <- 
+  crime_population_nhoods_df |>
+  dplyr::select(crime, population) |>
+  cor()
+crime_population_nhoods_cor <- crime_population_nhoods_cor[2,1]
+
+# Scatterplot crime and population (neighborhood-level)
+crime_population_nhoods_ggp <-
+  crime_population_nhoods_df  |>
+  ggplot() +
+  geom_point(aes(x= population, y = crime), size = .5) +
+  xlab("Bevolking") + 
+  ylab("Geregistreerde misdrijven") +
+  ggtitle(paste0("Bevolking en misdaad in buurten. R = ",
+                 round(crime_population_nhoods_cor, digits = 2)
+                 ))
+crime_population_nhoods_ggp 
+ggsave_svg(ggp = crime_population_nhoods_ggp , output = OUTPUT)
 
 
 # Calculate Gini's per municipality --------------------------------------------
@@ -203,6 +224,7 @@ municipality_gini_df <-
     n_nhoods = n(),
     n_crime = sum(crime),
     n_pop = sum(population),
+    crime_rate = 1000 * (n_crime / n_pop),
     # unweighted Gini coefficient (based in frequencies)
     gini_crime_unweighted = Gini(crime),
     gini_pop_unweighted = Gini(population),
@@ -212,34 +234,84 @@ municipality_gini_df <-
     .groups = "drop"
   ) 
 
-# Calculate correlation between crime and population (municipality-level)
-municipality_gini_df |> 
+# histogram of municipality population
+population_histogram_munis_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = n_pop), color = "black", fill = "darkgreen") +
+  xlab("Aantal inwoners") +
+  ylab("Aantal gemeenten") +
+  ggtitle("Aantal inwoners per gemeente")
+population_histogram_munis_ggp
+ggsave_svg(ggp = population_histogram_munis_ggp , output = OUTPUT)
+
+
+# histogram of municipality crime
+crime_histogram_munis_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = n_crime), color = "black", fill = "orange")  +
+  xlab("Aantal inwoners") +
+  ylab("Aantal geregistreerde misdrijven") +
+  ggtitle("Aantal misdrijven per gemeente") 
+crime_histogram_munis_ggp
+ggsave_svg(ggp = crime_histogram_munis_ggp , output = OUTPUT)
+
+
+# histogram of municipality crime rates
+crimerate_histogram_munis_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = crime_rate), color = "black", fill = "red")  +
+  xlab("Aantal geregistreerde misdrijven per 10000 inwoners") +
+  ylab("Aantal gemeenten") +
+  ggtitle("Aantal misdrijven per 1000 inwoners per gemeente") 
+crimerate_histogram_munis_ggp
+ggsave_svg(ggp = crimerate_histogram_munis_ggp , output = OUTPUT)
+
+
+# Calculate correlation between crime and population (municipality-level) ------
+crime_population_munis_cor <- 
+  municipality_gini_df |> 
   dplyr::select(n_crime, n_pop) |> 
   cor()
+crime_population_munis_cor <- crime_population_munis_cor[2,1]
 
-# Scatterplot crime and population (municipality-level)
-municipality_gini_df |>
+# scatterpplot crime against population (municipality-level) -------------------
+crime_population_scatter_munis_ggp <-
+  municipality_gini_df  |>
   ggplot() +
-  geom_point(aes(x= n_pop, y = n_crime), size = 1) +
+  geom_point(aes(x= n_pop, y = n_crime), size = .5) +
   xlab("Bevolking") + 
-  ylab("Geregistreerde misdrijven")
+  ylab("Geregistreerde misdrijven") +
+  ggtitle(paste0("Bevolking en misdaad in gemeenten. R = ",
+                 round(crime_population_munis_cor, digits = 2)
+  ))
+crime_population_scatter_munis_ggp
+ggsave_svg(ggp = crime_population_scatter_munis_ggp , output = OUTPUT)
 
-# Scatterplot crime and population (municipality-level excluding G4)
-municipality_gini_df |>
+
+# Calculate correlation between crime and population (municipality-level)
+#   with the G4 excluded
+crime_population_munis_noG4_cor <- 
+  municipality_gini_df |> 
+  dplyr::select(n_crime, n_pop) |> 
+  cor()
+crime_population_munis_noG4_cor <- crime_population_munis_noG4_cor[2,1]
+
+# Same without G4
+crime_population_munis_exG4_scatter_ggp <-
+  municipality_gini_df  |>
   filter(n_pop < 300000) |>
   ggplot() +
-  geom_point(aes(x= n_pop, y = n_crime), size = 1) +
+  geom_point(aes(x= n_pop, y = n_crime), size = .5) +
   xlab("Bevolking") + 
-  ylab("Geregistreerde misdrijven")
-
-# Scatterplot crime and gini
-municipality_gini_df |>
-  filter(n_pop < 300000,
-         n_pop > 10000) |>
-  ggplot() +
-  geom_point(aes(x= n_pop, y = gini_crime_unweighted), size = 1) +
-  xlab("Bevolking") + 
-  ylab("Gini")
+  ylab("Geregistreerde misdrijven") +
+  ggtitle(paste0("Bevolking en misdaad. Gemeenten zonder G4. R = ",
+                 round(crime_population_munis_noG4_cor, digits = 2)
+  ))
+crime_population_munis_exG4_scatter_ggp 
+ggsave_svg(ggp = crime_population_munis_exG4_scatter_ggp , output = OUTPUT)
 
 # Count number of neighborhoods per municipality -------------------------------
 municipality_nhood_count <- 
@@ -256,7 +328,6 @@ municipality_nhood_count <-
   dplyr::summarize(n = n()) |>
   dplyr::mutate(nhoods_cat = as.character(nhoods_cat))
 municipality_nhood_count 
-
 write_csv(x = municipality_nhood_count, 
           file = here("output", "municipality_nhood_count.csv"))
 
@@ -269,6 +340,8 @@ municipalities_less10_nhoods <-
   dplyr::arrange(municipality_lab)
 municipalities_less10_nhoods |>
   print(n=Inf)
+write_csv(x = municipalities_less10_nhoods, 
+          file = here("output", "municipalities_less10_nhoods.csv"))
 
 # List municipalities with less then 5 neighborhoods --------------------------
 municipalities_less5_nhoods <-
@@ -278,6 +351,8 @@ municipalities_less5_nhoods <-
   dplyr::arrange(municipality_lab)
 municipalities_less5_nhoods |>
   print(n=Inf)
+write_csv(x = municipalities_less5_nhoods, 
+          file = here("output", "municipalities_less5_nhoods.csv"))
 
 
 # select a random municipality with at least 10 neighborhoods ------------------
@@ -307,8 +382,7 @@ municipality_random_lorenz_ggp
 # store the plot
 ggsave_svg(ggp = municipality_random_lorenz_ggp, output = OUTPUT)
 
-
-# plot and store Lorenz curve for this random municipality ---------------------
+# function: plot Lorenz curve for a single municipality ------------------------
 plot_lorenz <- function(municipality) {
   if(nrow(municipality) == 1) {
     municipality |>
@@ -318,8 +392,7 @@ plot_lorenz <- function(municipality) {
     lorenzgini::lorenz(prop = FALSE) + 
     xlab("cumulatief % buurten") +
     ylab("cumulatief % misdrijven") +
-    ggtitle(paste0("Gemeente ", 
-                   municipality$municipality_lab,
+    ggtitle(paste0(municipality$municipality_lab,
                    " (Gini = ",
                    round(municipality$gini_crime_unweighted, digits = 2),
                    ")"))   +
@@ -328,38 +401,221 @@ plot_lorenz <- function(municipality) {
   }
 }  
 
-gini_amsterdam_ggp <-
+# Histogram of crime Gini across all municipalities ----------------------------
+n_municipalities <- 
+  municipality_gini_df |>
+  nrow()
+
+gini_crime_histogram_all_ggp <-
+  municipality_gini_df |>
+  ggplot() +
+  geom_histogram(aes(gini_crime_unweighted), 
+                 color = "black", 
+                 fill = CRIME_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .1)) +
+  xlab("Gini coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini coëfficiënt misdaad, alle ", 
+                 n_municipalities, 
+                 " gemeenten"))
+gini_crime_histogram_all_ggp
+ggsave_svg(ggp = gini_crime_histogram_all_ggp, output = OUTPUT)
+
+# Histogram of crime Gini across municipalities with 3+ neighborhoods ----------
+n_municipalities_3p <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  nrow()
+
+gini_crime_histogram_min3nhoods_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  ggplot() +
+  geom_histogram(aes(gini_crime_unweighted), 
+                 color = "black", 
+                 fill = CRIME_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .1)) +
+  xlab("Gini coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini coëfficiënt misdaad, ", 
+                 n_municipalities_3p, 
+                 " gemeenten"))
+gini_crime_histogram_min3nhoods_ggp
+ggsave_svg(ggp = gini_crime_histogram_min3nhoods_ggp, output = OUTPUT)
+
+# Histogram of population Gini across all municipalities -----------------------
+n_municipalities <- 
+  municipality_gini_df |>
+  nrow()
+
+gini_pop_histogram_all_ggp <-
+  municipality_gini_df |>
+  ggplot() +
+  geom_histogram(aes(gini_pop_unweighted), 
+                 color = "black", 
+                 fill = POP_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .1)) +
+  xlab("Gini coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini coëfficiënt bevolking, alle ", 
+                 n_municipalities, 
+                 " gemeenten"))
+gini_pop_histogram_all_ggp
+ggsave_svg(ggp = gini_pop_histogram_all_ggp, output = OUTPUT)
+
+# Histogram of population Gini across municipalities with 3+ neighborhoods -----
+n_municipalities_3p <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  nrow()
+
+gini_pop_histogram_min3nhoods_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  ggplot() +
+  geom_histogram(aes(gini_pop_unweighted), 
+                 color = "black", 
+                 fill = POP_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .1)) +
+  xlab("Gini coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini coëfficiënt bevolking, ", 
+                 n_municipalities_3p, 
+                 " gemeenten"))
+gini_pop_histogram_min3nhoods_ggp
+ggsave_svg(ggp = gini_pop_histogram_min3nhoods_ggp, output = OUTPUT)
+
+
+# Scatterplot population and crime Gini coefficient ----------------------------
+
+gini_population_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_pop, gini_crime_unweighted) |>
+  cor()
+gini_population_cor <- gini_population_cor[2,1]
+
+gini_pop_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_pop, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= n_pop, y = gini_crime_unweighted), size = 1) +
+  xlab("Bevolking") + 
+  ylab("Gini") +
+  ggtitle(paste0("Gini coëfficiënt en omvang bevolking. R2 = ",
+          round(gini_population_cor, digits = 2)
+          ))
+gini_pop_scatter_ggp
+ggsave_svg(ggp = gini_pop_scatter_ggp, output = OUTPUT)
+
+# Scatterplot population and crime Gini coefficient ----------------------------
+gini_crime_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_crime, gini_crime_unweighted) |>
+  cor()
+gini_crime_cor <- gini_crime_cor[2,1]
+
+gini_crime_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_crime, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= n_crime, y = gini_crime_unweighted), size = 1) +
+  xlab("Geregistreerde misdaad") + 
+  ylab("Gini") + 
+  ggtitle(paste0("Gini coëfficiënt en omvang misdaad. R2 = ",
+                 round(gini_crime_cor, digits = 2)
+  ))
+gini_crime_scatter_ggp
+ggsave_svg(ggp = gini_crime_scatter_ggp, output = OUTPUT)
+
+# Scatterplot population and crime Gini coefficient ----------------------------
+gini_crimerate_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(crime_rate, gini_crime_unweighted) |>
+  cor()
+gini_crimerate_cor <- gini_crimerate_cor[2,1]
+
+gini_crimerate_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(crime_rate, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= crime_rate, y = gini_crime_unweighted), size = 1) +
+  xlab("(10000) x Geregistreerde misdaad / bevolking") + 
+  ylab("Gini") +  
+  ggtitle(paste0("Gini coëfficiënt en relative omvang misdaad. R2 = ",
+                  round(gini_crimerate_cor, digits = 2)
+  ))
+gini_crimerate_scatter_ggp
+ggsave_svg(ggp = gini_crimerate_scatter_ggp, output = OUTPUT)
+
+
+# Lorenz curves of selected individual cities ----------------------------------
+lorenz_amsterdam_ggp <-
   municipality_gini_df |>
   dplyr::filter(municipality_lab == "Amsterdam") |>
   plot_lorenz()
 
-gini_rotterdam_ggp <-
+lorenz_rotterdam_ggp <-
 municipality_gini_df |>
   dplyr::filter(municipality_lab == "Rotterdam") |>
   plot_lorenz()
 
-gini_sgravenhage_ggp <-
-municipality_gini_df |>
+lorenz_sgravenhage_ggp <-
+  municipality_gini_df |>
   dplyr::filter(municipality_lab == "'s-Gravenhage") |>
   plot_lorenz()
 
-gini_utrecht_ggp <-
-municipality_gini_df |>
+lorenz_utrecht_ggp <-
+  municipality_gini_df |>
   dplyr::filter(municipality_lab == "Utrecht") |>
   plot_lorenz()
 
-municipality_gini_df |>
-  dplyr::filter(municipality_lab == "Eindhoven") |>
+lorenz_leiden_ggp <-
+  municipality_gini_df |>
+  dplyr::filter(municipality_lab == "Leiden") |>
   plot_lorenz()
 
-municipality_gini_df |>
-  dplyr::filter(municipality_lab == "Almere") |>
+lorenz_haarlem_ggp <-
+  municipality_gini_df |>
+  dplyr::filter(municipality_lab == "Haarlem") |>
   plot_lorenz()
 
+lorenz_amersfoort_ggp <-
+  municipality_gini_df |>
+  dplyr::filter(municipality_lab == "Amersfoort") |>
+  plot_lorenz()
 
-# store the plot
-ggsave_svg(ggp = municipality_random_lorenz_ggp, output = OUTPUT)
+lorenz_deurne_ggp <-
+  municipality_gini_df |>
+  dplyr::filter(municipality_lab == "Deurne") |>
+  plot_lorenz()
 
+# Plot (crime) Lorenz curve for the G4 municipalities
+lorenz_G4_ggp <- 
+  lorenz_amsterdam_ggp + 
+  lorenz_rotterdam_ggp + 
+  lorenz_sgravenhage_ggp + 
+  lorenz_utrecht_ggp
+lorenz_G4_ggp
+ggsave_svg(ggp = lorenz_G4_ggp, output = OUTPUT)
+
+# Plot (crime) Lorenz curve for the K4 municipalities
+lorenz_K4_ggp <- 
+  lorenz_amersfoort_ggp + 
+  lorenz_deurne_ggp + 
+  lorenz_haarlem_ggp + 
+  lorenz_leiden_ggp
+lorenz_K4_ggp
+ggsave_svg(ggp = lorenz_K4_ggp, output = OUTPUT)
 
 # merge Gini with the municipality geography -----------------------------------
 municipality_gini_sf <-  
@@ -367,125 +623,49 @@ municipality_gini_sf <-
              municipality_gini_df,
              by = "municipality_id") 
 
-# plot histograms
-
-gini_crime_unweighted_ggp <-
-  municipality_gini_df |>
-  ggplot() +
-  geom_histogram(aes(x = gini_crime_unweighted), 
-                 fill = "lightblue", 
-                 color = "black",
-                 binwidth = .05)  +
-  scale_x_continuous(breaks = seq(0,1,.1), limits = c(0,1)) +
-  xlab("Gini coëfficiënt") +
-  ylab("Aantal gemeenten")
-gini_crime_unweighted_ggp 
-
-gini_crime_pop_weighted_ggp <-
-  municipality_gini_df |>
-  ggplot() +
-  geom_histogram(aes(x = gini_crime_pop_weighted), 
-                 fill = "orange", 
-                 color = "black",
-                 binwidth = .05)  +
-  scale_x_continuous(breaks = seq(0,1,.1), limits = c(0,1)) +
-  xlab("Gini coëfficiënt") +
-  ylab("Aantal gemeenten")
-gini_crime_pop_weighted_ggp
-
-# plot histograms for municipalities with at least 10 neighborhoods
-
-gini_crime_unweighted_ggp <-
-  municipality_gini_df |>
-  filter(n_nhoods >= 10) |>
-  ggplot() +
-  geom_histogram(aes(x = gini_crime_unweighted), 
-                 fill = "lightblue", 
-                 color = "black",
-                 binwidth = .05) +
-  scale_x_continuous(breaks = seq(0,1,.1), limits = c(0,1)) +
-  xlab("Gini coëfficiënt") +
-  ylab("Aantal gemeenten")
-gini_crime_unweighted_ggp 
-
-gini_crime_pop_weighted_ggp <-
-  municipality_gini_df |>
-  filter(n_nhoods >= 10) |>
-  ggplot() +
-  geom_histogram(aes(x = gini_crime_pop_weighted), 
-                 fill = "orange", 
-                 color = "black",
-                 binwidth = .05)  +
-  scale_x_continuous(breaks = seq(0,1,.1), limits = c(0,1)) +
-  xlab("Gini coëfficiënt") +
-  ylab("Aantal gemeenten")
-gini_crime_pop_weighted_ggp
-
-municipality_gini_df |> 
-  select(starts_with("gini")) |> 
-  filter(gini_crime_unweighted > .20,
-         gini_pop_unweighted > .20) |>
+# Scatterplot Gini coëfficiënten van misdaad en bevolking ----------------------
+gini_crime_pop_cor <-
+  municipality_gini_df |> 
+  filter(n_nhoods > 2) |>
+  select(gini_crime_unweighted, gini_pop_unweighted) |> 
   cor()
+gini_crime_pop_cor <- gini_crime_pop_cor[2,1]
 
-municipality_gini_df |> 
-  filter(gini_crime_unweighted > .20,
-         gini_pop_unweighted > .20) |>
-  ggplot() + 
+gini_crime_pop_scatter_ggp <- 
+  municipality_gini_df |> 
+  filter(n_nhoods > 2) |>  ggplot() + 
   geom_point(aes(x = gini_crime_unweighted,
-                 y = gini_pop_unweighted))
-
-municipality_gini_df |>
-  filter(gini_crime_unweighted < .35) 
-
-
-# store histograms
-ggsave_svg(ggp = gini_crime_unweighted_ggp, output = OUTPUT)
-ggsave_svg(ggp = gini_crime_pop_weighted_ggp, output = OUTPUT)
-
-# correlation between unweighted and population weighted gini
-municipality_gini_df |>
-  dplyr::select(gini_crime_unweighted, gini_crime_pop_weighted) |> 
-  cor()
-
-
-# Municipalities with lowest Gini (low inequality, weak concentration)
-municipality_gini_df |>
-  arrange(gini_crime_unweighted) 
-
-# Municipalities with highest Gini (high inequality, strong concentration)
-municipality_gini_df |>
-  arrange(desc(gini_crime_unweighted)) 
-
-# 20 largest cities
-
-municipality_gini_df |> 
-  arrange(desc(n_pop)) |>
-  slice_head(n = 20) |>
-  select(municipality_lab, gini_crime_unweighted, gini_crime_pop_weighted)
-
-
+                 y = gini_pop_unweighted)) +
+  xlab("Gini coefficient misdaad") + 
+  ylab("Gini coefficient bevolking") +  
+  ggtitle(paste0("Gini coëfficiënten van misdaad en bevolking. R2 = ",
+                 round(gini_crime_pop_cor, digits = 2)
+  ))
+gini_crime_pop_scatter_ggp
+ggsave_svg(ggp = gini_crime_pop_scatter_ggp, output = OUTPUT)  
 
 # Map Gini ---------------------------------------------------------------------
 
-# unweighted
-municipality_gini_crime_unweighted_ggp <-
+# unweighted Gini (crime)
+map_gini_crime_ggp <-
   municipality_gini_sf |>
+  filter(n_nhoods > 2) |>
   ggplot() +
   geom_sf(aes(fill = gini_crime_unweighted )) +
   scale_fill_steps2()
-municipality_gini_crime_unweighted_ggp
+map_gini_crime_ggp
+ggsave_svg(ggp = map_gini_crime_ggp, output = OUTPUT)  
 
-# population weighted
-municipality_gini_crime_pop_weighted_ggp <-
+# unweighted Gini (population)
+map_gini_pop_ggp <-
   municipality_gini_sf |>
+  filter(n_nhoods > 2) |>
   ggplot() +
-  geom_sf(aes(fill = gini_crime_pop_weighted )) +
+  geom_sf(aes(fill = gini_pop_unweighted )) +
   scale_fill_steps2()
-municipality_gini_crime_pop_weighted_ggp
+map_gini_pop_ggp
+ggsave_svg(ggp = map_gini_pop_ggp, output = OUTPUT)  
 
-# store maps
-ggsave_svg(ggp = municipality_gini_crime_unweighted_ggp, output = OUTPUT)
-ggsave_svg(ggp = municipality_gini_crime_pop_weighted_ggp, output = OUTPUT)
 
 # End of script ----------------------------------------------------------------
 sessionInfo()
