@@ -1,0 +1,877 @@
+---
+title: "Verdeling van misdaad tussen buurten in Nederlandse gemeenten"
+bibliography: "misdaad_concentratie.bib"
+author: "Wim Bernasco, Stijn Ruiter, Wouter Steenbeek & Steve van de Weijer"
+format: docx
+lang: nl
+editor: visual
+---
+
+```{r}
+#| label: manage-packages
+#| include: false
+# Load and install required packages if necessary ----
+for(pkg_name_chr in c("here",             # local file references 
+                      "tidyverse",        # data manipulation
+                      "cbsodataR",        # CBS data API interface 
+                      "DescTools",        # Gini
+                      "ineq",             # Gini
+                      "dineq",            # Gini
+                      "reldist",          # Gini
+                      "giniVarCI",        # Gini
+                      "REAT",             # Gini
+                      "patchwork",        # Combine ggplots
+                      "remotes",          # install from outside CRAN
+                      "sf",               # spatial stuff
+                      "cartogram",        # cartograms
+                      "viridis")) {       # colors
+  if(!require(pkg_name_chr, character.only = TRUE)) {
+    install.packages(pkg_name_chr)
+    library(pkg_name_chr)
+  }
+}
+
+if(!require("lorenzgini", character.only = TRUE)) {
+  remotes::install_github("wsteenbeek/lorenzgini", upgrade = "always")
+  library(lorenzgini)
+}
+```
+
+```{r}
+#| label: create-directories
+#| include: false
+# Create directories ----
+
+# Directory names (CAPITAL)
+DATA              <-  here("data")                 # main data folder
+DATA_POPULATION   <-  here("data", "population")   # population
+DATA_CRIME        <-  here("data", "crime")        # crime
+DATA_GEO          <-  here("data", "geo")          # geometries
+DATA_WORK         <-  here("data", "work")         # working data
+OUTPUT            <-  here("output")               # all output
+
+# Create these directories ----
+map(c(DATA,  DATA_POPULATION, DATA_CRIME, DATA_GEO, DATA_WORK, OUTPUT), 
+    dir.create, showWarnings=FALSE)
+```
+
+```{r}
+#| label: define-constants
+#| include: false
+# Define constants and settings ----
+set.seed(12345)
+CRIME_COLOR <- "lightblue"
+POP_COLOR <- "pink"
+REFRESH_DOWNLOAD <- FALSE
+REFRESH_CALCULATE <- FALSE
+```
+
+```{r}
+#| label: define-functions
+#| include: false
+# Define ggplot printing functions ----
+
+# Function definition: store ggplot figure as PNG file
+ggsave_png <- function(ggp, output, ...) {
+  ggsave(filename = paste(substitute(ggp),".png", sep=""), 
+         device = "png", plot = ggp, path = output, 
+         limitsize = TRUE, ...)
+}
+
+# Function definition: store ggplot figure as SVG file
+ggsave_svg <- function(ggp, output, ...) {
+  ggsave(filename = paste(substitute(ggp),".svg", sep=""), 
+         device = "svg", plot = ggp, path = output, 
+         limitsize = TRUE, ...)
+}
+
+# Function definition: store ggplot figure as JPG file
+ggsave_jpg <- function(ggp, output, ...) {
+  ggsave(filename = paste(substitute(ggp),".jpg", sep=""), 
+         device = "jpg", plot = ggp, path = output, 
+         limitsize = TRUE, dpi = 600, ...)
+}
+```
+
+```{r}
+#| label: download-store-population-data
+#| include: false
+# Download and store population data ----
+FILENAME_POPULATION_2024 <- "Population85984_2024.csv"
+# only download it the file is not locally present
+if (!(file.exists(here(DATA_POPULATION, FILENAME_POPULATION_2024)))) {
+  # Kerncijfers Wijken en buurten 2024
+  cbs_get_data(id = "85984NED",            
+               dir = DATA_POPULATION) |>
+    # we only need the neighborhood population data  
+    dplyr::filter(trimws(SoortRegio_2) == "Buurt") |>
+    # we only need neighborhood ID, population  
+    dplyr::select(nhood_id = WijkenEnBuurten, 
+                  population = AantalInwoners_5) |>
+    write.csv(here(DATA_POPULATION, FILENAME_POPULATION_2024))
+}
+```
+
+```{r}
+#| label: download-store-crime-data
+#| include: false
+# Download and store crime data ----
+FILENAME_CRIME <- "PolRegCrime47018_2023.csv"
+# conditional download
+if (!(file.exists(here(DATA_CRIME, FILENAME_CRIME)))) {
+  cbs_get_data(id="47018NED", 
+               Perioden = has_substring("2023JJ"),          # year 2023 only 
+               WijkenEnBuurten = has_substring("BU"),       # nhoods only
+               #SoortMisdrijf = has_substring("0.0.0"),     # all crimes only
+               catalog="Politie", 
+               verbose=TRUE, 
+               base_url="https://dataderden.cbs.nl",
+               dir=DATA_CRIME) |> 
+    dplyr::select(WijkenEnBuurten, SoortMisdrijf, GeregistreerdeMisdrijven_1) |>
+    # store
+    write.csv(here(DATA_CRIME, FILENAME_CRIME))
+    # this big file is no longer required
+    file.remove(here(DATA_CRIME, "data.csv"))
+}
+```
+
+```{r}
+#| label: download-store-geometries
+#| include: false
+# Download and store geometries----
+if (!(file.exists(here(DATA_GEO, "municipalities_2024.gpkg")))) {
+  # download 2024 file (as ZIP)
+  download.file(
+    url = "https://download.cbs.nl/regionale-kaarten/WijkBuurtkaart_2024_v0.zip",
+    destfile = here("Data", "geo", "WijkBuurtkaart_2024_v0.zip")
+  )
+  # unzip it  (into a single GPKG)
+  unzip(zipfile = here("Data", "geo", "WijkBuurtkaart_2024_v0.zip"),            
+        exdir   = here("Data", "geo")
+  )
+  # Extract the municipalities part
+  municipalities_2024_sf <-
+    st_read(
+      dsn = here("Data", "geo", "WijkBuurtkaart_2024_v0.gpkg"), "gemeenten_v0") |>
+    # Remove water bodies
+    dplyr::filter(water == "NEE") |>
+    # Remove some redundant variables
+    dplyr::select(-jrstatcode, -water, -jaar)
+  # Store locally as GPKG
+  st_write(obj = municipalities_2024_sf, 
+           dsn = here("Data", "geo", "municipalities_2024.gpkg"),
+           append = FALSE)
+  # remove the big files (for space/Git reasons)
+  file.remove(here("Data", "geo", "WijkBuurtkaart_2024_v0.zip"))
+  file.remove(here("Data", "geo", "WijkBuurtkaart_2024_v0.gpkg"))
+} else {
+    municipalities_2024_sf <-
+    st_read(
+      dsn = here("Data", "geo", "municipalities_2024.gpkg")) 
+}
+  
+
+
+# download map Netherlands 2023
+# FILENAME_GEOZIP <- "wijkbuurtkaart_2023_v1.zip"
+# # only download the file if it does not exist locally
+# if (!(file.exists(here(DATA_GEO, FILENAME_GEOZIP)))) {
+#   download.file(
+#     url = file.path("https://download.cbs.nl/regionale-kaarten", FILENAME_GEOZIP),
+#     destfile = here(DATA_GEO, "wijkbuurtkaart_2023_v1.zip") 
+#   )
+# }
+# unzip the map
+# only unzip if "buurten_2023_v1.prj" exists locally (assuming all other
+#   files from the ZIP also exist)
+# if (!(file.exists(here(DATA_GEO, "gemeenten_2023_v1.prj")))) {
+#   unzip(zipfile = here(DATA_GEO, FILENAME_GEOZIP),
+#         exdir   = here(DATA_GEO),
+#         junkpaths = TRUE)
+# }
+```
+
+```{r}
+#| label: download_municipality-province-mapping
+#| include: false
+if (!(file.exists(here(DATA_GEO, "municipality_in_province.csv")))) {
+    cbs_get_data(id="85516NED") |>
+    select(municipality_id = Code_3,
+           province_lab = Naam_4) |>
+    mutate(municipality_id = trimws(substring(municipality_id, 3, 6)),
+           province_lab = trimws(province_lab),
+           province_lab = if_else(condition = province_lab == "Fryslân",
+                                  true = "Friesland",
+                                  false = province_lab)) |>
+    distinct() |>
+    write_csv(here(DATA_GEO, "municipality_in_province.csv"))
+} 
+
+```
+
+```{r}
+#| label: read-process-data
+#| include: false
+# Read and process data --------------------------------------------------------
+
+# Municipality - province mapping table
+municipality_in_province_df <- 
+  read_csv(here(DATA_GEO, "municipality_in_province.csv"))
+
+# read IDs and labels of municipalities
+municipality_nhood_df <-
+  read.csv(here(DATA_CRIME, "WijkenEnBuurten.csv")) |>  
+  dplyr::filter(substring(Key, 1,2) == "GM") |>
+  mutate(municipality_id  = trimws(substring(Key, 3, 6)),
+         municipality_lab = trimws(Title)) |>
+  dplyr::select(municipality_id, municipality_lab) 
+
+# read IDs and labels of neighborhoods
+label_nhoods_df <-
+  read.csv(here(DATA_CRIME, "WijkenEnBuurten.csv")) |>  
+  dplyr::filter(substring(Key, 1,2) == "BU") |>
+  mutate(nhood_id  = trimws(Key),
+         nhood_lab = trimws(Title)) |>
+  dplyr::select(nhood_id, nhood_lab) 
+
+# read selection of "brengdelicten"
+selection_crimetypes_df <-
+  read.csv(here(DATA_CRIME, "BrengDelicten.csv")) |>  
+  mutate(crimetype = trimws(Key)) |>
+  dplyr::select(crimetype, Brengdelict) 
+
+# read crime type labels
+label_crimetypes_df <- 
+  read.csv(here(DATA_CRIME, "SoortMisdrijf.csv")) |>  
+    dplyr::mutate(
+      crimetype = trimws(Key),
+      crimetype_lab = trimws(Title)
+    ) |>
+    dplyr::select(crimetype, crimetype_lab)
+
+# process crime data
+crime_2023_subcats_df <-
+  # read the downloaded crime data file
+  read.csv(here(DATA_CRIME, FILENAME_CRIME)) |>
+  # rename and convert columns 
+  dplyr::mutate(
+    nhood_id         = trimws(WijkenEnBuurten),
+    #nhood_lab        = trimws(WijkenEnBuurten_label),
+    crimetype        = trimws(SoortMisdrijf),
+    #crimetype_lab    = trimws(SoortMisdrijf_label),
+    crime            = GeregistreerdeMisdrijven_1,
+    municipality_id  = substring(WijkenEnBuurten, 3, 6)
+  ) |>
+  # remove cases with unknown neighborhood ID ("Buurt onbekend")
+  dplyr::filter(nhood_id != "BU00000000") |>
+  # add municipality labels (names)
+  left_join(municipality_nhood_df, by = "municipality_id") |>
+  # add crimetype labels (names)
+  left_join(label_crimetypes_df, by = "crimetype") |>
+  # add neighborhood labels (names)
+  left_join(label_nhoods_df, by = "nhood_id")|>
+  # remove sum of all crimetypes
+  dplyr::filter(crimetype_lab != "Totaal misdrijven") |>
+  # Filter out crime types purposefully unreported at spatial resolution
+  dplyr::filter(!(crimetype_lab %in% 
+                  c("1.4.1 Zedenmisdrijf",
+                    "3.2.1 Kinderporno",
+                    "3.2.2 Kinderprostitutie",
+                    "3.7.3 Maatsch. integriteit (overig)"))) |>
+  # add crimetype selection
+  left_join(selection_crimetypes_df, by = "crimetype") |>
+  # select required columns
+  dplyr::select(nhood_id, nhood_lab, crimetype, crimetype_lab, crime, 
+                municipality_id, municipality_lab, Brengdelict)
+
+# Select only 'brengdelicten' and aggregate 
+crime_2023_df <-
+  crime_2023_subcats_df |>
+  # Brengdelicten only
+  dplyr::filter(Brengdelict == 1) |>
+  group_by(nhood_id, nhood_lab, municipality_id, municipality_lab) |>
+  summarize(crime = sum(crime), .groups = "drop")
+  
+
+# read population data
+population_2024_df <-
+  read.csv(here(DATA_POPULATION, FILENAME_POPULATION_2024))
+
+# read geometry data
+FILENAME_MUNICIPALTIES_GEO <- "gemeenten_2023_v1.shp"
+geometry_municipalities_sf <- 
+  sf::st_read(dsn = file.path(DATA_GEO, FILENAME_MUNICIPALTIES_GEO)) |>
+  # exclude bodies of water
+  dplyr::filter(H2O == "NEE", GM_NAAM != "Buitenland") |>
+  # Create municipality ID (mumeric part)
+  mutate(municipality_id = trimws(substring(GM_CODE, 3, 6)))
+
+
+# merge crime and population data ----------------------------------------------
+crime_population_nhoods_df <-
+  dplyr::inner_join(crime_2023_df, population_2024_df, by = "nhood_id")
+
+```
+
+```{r}
+#| label: crime-subcats-selection
+#| include: false
+# describe crime type frequencies
+crime_subcats_freq_table <-
+  crime_2023_subcats_df |> 
+  group_by(crimetype_lab) |>
+  summarize(crime = sum(crime),
+            brengdelict = mean(Brengdelict))
+
+crime_subcats_freq_table |>
+  write_csv(here("output", "crime_subcats_freq_table.csv"))
+
+crime_2023_subcats_df |> 
+  group_by(Brengdelict) |>
+  summarize(crime = sum(crime))
+```
+
+```{r}
+#| label: describe-neighborhood-level
+#| include: false
+# describe crime and population at neighborhood level ----
+
+# histogram of neighborhood population ----
+nhoods_histogram_population_ggp <-
+  crime_population_nhoods_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = population), color = "black", fill = "darkgreen") +
+  xlab("Aantal inwoners") +
+  ylab("Aantal buurten") +
+  ggtitle("Aantal inwoners per buurt")
+nhoods_histogram_population_ggp
+ggsave_svg(ggp = nhoods_histogram_population_ggp, output = OUTPUT)
+
+# histogram of neighborhood crime ----
+nhoods_histogram_crime_ggp <-
+  crime_population_nhoods_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = crime), color = "black", fill = "orange")  +
+  xlab("Aantal inwoners") +
+  ylab("Aantal geregistreerde misdrijven") +
+  ggtitle("Aantal misdrijven per buurt") 
+nhoods_histogram_crime_ggp
+ggsave_svg(ggp = nhoods_histogram_crime_ggp, output = OUTPUT)
+
+# Correlation between population and crime (neighborhood-level) ----
+nhoods_crime_population_cor <- 
+  crime_population_nhoods_df |>
+  dplyr::select(crime, population) |>
+  cor()
+nhoods_crime_population_cor <- nhoods_crime_population_cor[2,1]
+
+# Scatterplot crime and population (neighborhood-level) ----
+nhoods_scatter_crime_population_ggp <-
+  crime_population_nhoods_df  |>
+  ggplot() +
+  geom_point(aes(x= population, y = crime), size = .5) +
+  xlab("Bevolking") + 
+  ylab("Geregistreerde misdrijven") +
+  ggtitle(paste0("Bevolking en misdaad in buurten. R = ",
+                 round(nhoods_crime_population_cor, digits = 2)
+                 ))
+nhoods_scatter_crime_population_ggp 
+ggsave_svg(ggp = nhoods_scatter_crime_population_ggp , output = OUTPUT)
+```
+
+```{r}
+#| label: calculate-gini
+#| include: false
+# Calculate Gini per municipality ----
+municipality_gini_df <- 
+  crime_population_nhoods_df |>
+  dplyr::group_by(municipality_lab, municipality_id) |>
+  dplyr::summarize(
+    n_nhoods = n(),
+    n_crime = sum(crime),
+    n_pop = sum(population),
+    muni_crime_rate = 1000 * (n_crime / n_pop),
+    # unweighted Gini-coefficient (based in frequencies)
+    gini_crime_unweighted = 
+      REAT::gini2(x = crime, weighting = NULL, coefnorm = TRUE),
+    .groups = "drop",
+    gini_population_unweighted =
+            REAT::gini2(x = population, weighting = NULL, coefnorm = TRUE)
+  ) |>
+  left_join(municipality_in_province_df, by = "municipality_id")
+
+# Store in file for sharing ----
+  municipality_gini_df |>
+  select(naam = municipality_lab, 
+         nummer = municipality_id,
+         bevolking = n_pop,
+         misdaad = n_crime,
+         buurten = n_nhoods,
+         gini_misdaad = gini_crime_unweighted, 
+         provincie = province_lab) |>
+    mutate(gini_misdaad = round(gini_misdaad, digits = 2),
+           # remove all commas from municipality names
+           naam = stringr::str_replace_all(naam, ",", ""),
+           naam = if_else(condition = naam == "Noardeast-Fryslân",
+                          true = "Noordoost-Friesland",
+                          false = naam)) |>
+  write_csv(here("output", "gemeenten_NL_gini.csv"))
+  
+  
+# Merge municipality Gini with geography -----
+municipality_gini_sf <-  
+  right_join(geometry_municipalities_sf, 
+             municipality_gini_df,
+             by = "municipality_id") 
+  
+  
+```
+
+```{r}
+#| label: describe-municipality-level
+#| include: false
+# Describe data at municipality level
+
+# Histogram of municipality population ----
+
+munis_histogram_population_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = n_pop), color = "black", fill = "darkgreen") +
+  xlab("Aantal inwoners") +
+  ylab("Aantal gemeenten") +
+  ggtitle("Aantal inwoners per gemeente")
+munis_histogram_population_ggp
+ggsave_svg(ggp = munis_histogram_population_ggp , output = OUTPUT)
+
+
+# histogram of municipality crime
+munis_histogram_crime_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = n_crime), color = "black", fill = "orange")  +
+  xlab("Aantal inwoners") +
+  ylab("Aantal geregistreerde misdrijven") +
+  ggtitle("Aantal misdrijven per gemeente") 
+munis_histogram_crime_ggp
+ggsave_svg(ggp = munis_histogram_crime_ggp , output = OUTPUT)
+
+
+# histogram of municipality crime rates
+munis_histogram_crimerate_ggp <-
+  municipality_gini_df |> 
+  ggplot() + 
+  geom_histogram(aes(x = muni_crime_rate), color = "black", fill = "red")  +
+  xlab("Aantal geregistreerde misdrijven per 10000 inwoners") +
+  ylab("Aantal gemeenten") +
+  ggtitle("Aantal misdrijven per 1000 inwoners per gemeente") 
+munis_histogram_crimerate_ggp
+ggsave_svg(ggp = munis_histogram_crimerate_ggp , output = OUTPUT)
+
+
+# Calculate correlation between crime and population (municipality-level) ------
+munis_crime_population_cor <- 
+  municipality_gini_df |> 
+  dplyr::select(n_crime, n_pop) |> 
+  cor()
+munis_crime_population_cor <- munis_crime_population_cor[2,1]
+
+# Scatterplot crime against population (municipality-level) -------------------
+munis_scatter_crime_population_ggp <-
+  municipality_gini_df  |>
+  ggplot() +
+  geom_point(aes(x= n_pop, y = n_crime), size = .5) +
+  xlab("Bevolking") + 
+  ylab("Geregistreerde misdrijven") +
+  ggtitle(paste0("Bevolking en misdaad in gemeenten. R = ",
+                 round(munis_crime_population_cor, digits = 2)
+  ))
+munis_scatter_crime_population_ggp
+ggsave_svg(ggp = munis_scatter_crime_population_ggp , output = OUTPUT)
+
+
+
+# Count number of neighborhoods per municipality ----
+municipality_nhood_count <- 
+  municipality_gini_df |>
+  dplyr::mutate(nhoods_cat = case_match(
+    n_nhoods,
+    1:9  ~ "01-09",
+    10:19 ~ "10-19",
+    20:49 ~ "20-49",
+    50:99 ~ "50-99",
+    100:999 ~ "99+") 
+  ) |>
+  dplyr::group_by(nhoods_cat) |>
+  dplyr::summarize(n = n()) |>
+  dplyr::mutate(nhoods_cat = as.character(nhoods_cat))
+municipality_nhood_count 
+write_csv(x = municipality_nhood_count, 
+          file = here("output", "municipality_nhood_count.csv"))
+
+
+# List municipalities with less then 3 neighborhoods ----
+municipalities_less3_nhoods <-
+  municipality_gini_df |>
+  dplyr::filter(n_nhoods < 3) |>
+  dplyr::select(municipality_lab) |>
+  dplyr::arrange(municipality_lab)
+municipalities_less3_nhoods |>
+  print(n=Inf)
+write_csv(x = municipalities_less3_nhoods, 
+          file = here("output", "municipalities_less3_nhoods.csv"))
+
+```
+
+```{r}
+#| label: describe-gini
+#| include: false
+# Describe Gini
+
+# select a random municipality with at least 10 neighborhoods ----
+municipality_random_selection <-
+  municipality_gini_df |>
+  dplyr::filter(n_nhoods >= 10) |>
+  filter(municipality_lab == "Katwijk") |>
+  dplyr::slice_sample(n = 1)
+municipality_random_selection 
+
+# plot and store Lorenz curve for this random municipality ----
+# NOTE: This is Figure 1 in the reporting article
+municipality_random_unweighted_lorenz_ggp <-
+  municipality_random_selection |>
+  dplyr::left_join(crime_population_nhoods_df, by = "municipality_lab") |> 
+  dplyr:: select(crime) |> 
+  dplyr::pull() |> 
+  lorenzgini::lorenz(prop = FALSE) + 
+    xlab("cumulatief % buurten") +
+    ylab("cumulatief % misdrijven") +
+    ggtitle(municipality_random_selection$municipality_lab) +
+    geom_hline(aes(yintercept = 80), linetype = "dotted") +
+    geom_hline(aes(yintercept = 40), linetype = "dotted") +
+    geom_vline(aes(xintercept = 20), linetype = "dotted") +
+    geom_vline(aes(xintercept = 60), linetype = "dotted") +
+    scale_y_continuous(breaks = seq(0, 100, 10)) +
+    scale_x_continuous(breaks = seq(0, 100, 10))
+  
+municipality_random_unweighted_lorenz_ggp
+# store the plot
+ggsave_svg(ggp = municipality_random_unweighted_lorenz_ggp, output = OUTPUT)
+
+# function: plot Lorenz curve for a single municipality ------------------------
+plot_lorenz <- function(municipality) {
+  if(nrow(municipality) == 1) {
+    municipality |>
+    dplyr::left_join(crime_population_nhoods_df, by = "municipality_lab") |> 
+    dplyr::select(crime) |>
+    dplyr::pull() |> 
+    lorenzgini::lorenz(prop = FALSE) + 
+    xlab("cumulatief % buurten") +
+    ylab("cumulatief % misdrijven") +
+    #ggtitle(municipality$municipality_lab)   +
+    geom_hline(aes(yintercept = 80), linetype = "dotted") +
+    geom_vline(aes(xintercept = 20), linetype = "dotted")
+  }
+}  
+
+# Create Lorenz curve for any municipality, example)
+municipality_any_lorenz_ggp <- 
+  plot_lorenz(municipality_gini_df |> filter(municipality_lab == "Hof van Twente"))
+municipality_any_lorenz_ggp
+# store the plot
+ggsave_svg(ggp = municipality_any_lorenz_ggp, output = OUTPUT)
+  
+
+# Histogram of crime Gini across all municipalities ----
+# Count municipalities
+n_municipalities <- 
+  municipality_gini_df |>
+  nrow()
+
+# Create histogram
+gini_crime_histogram_all_ggp <-
+  municipality_gini_df |>
+  ggplot() +
+  geom_histogram(aes(gini_crime_unweighted), 
+                 color = "black", 
+                 fill = CRIME_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .1)) +
+  scale_y_continuous(breaks = seq(0,70, 10)) +
+  xlab("Gini-coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini-coëfficiënt misdaad, alle ", 
+                 n_municipalities, 
+                 " gemeenten"))
+gini_crime_histogram_all_ggp
+ggsave_svg(ggp = gini_crime_histogram_all_ggp, output = OUTPUT)
+
+# Histogram of crime Gini across municipalities with 3+ neighborhoods -----
+# Count municipalities
+n_municipalities_3p <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  nrow()
+# create the histogram
+# NOTE: This is Figure 2 in the reporting article
+gini_crime_unweighted_histogram_min3nhoods_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  ggplot() +
+  geom_histogram(aes(x = gini_crime_unweighted), 
+                 color = "black", 
+                 fill = CRIME_COLOR,
+                 binwidth = .05) +
+  scale_x_continuous(breaks = seq(.2, .9, .05)) +
+  scale_y_continuous(breaks = seq(0,70, 5)) +
+  xlab("Gini-coëfficiënt") +
+  ylab("Aantal gemeenten") +
+  ggtitle(paste0("Verdeling Gini-coëfficiënt misdaad, ", 
+                 n_municipalities_3p, 
+                 " gemeenten")) +
+    theme(rect = element_blank())
+gini_crime_unweighted_histogram_min3nhoods_ggp
+ggsave_svg(ggp = gini_crime_unweighted_histogram_min3nhoods_ggp, output = OUTPUT)
+
+
+
+
+# Gini , mean and 1st and 3rd quartile
+municipality_gini_unweighted_min3nhoods_summary <-   
+  municipality_gini_df |> 
+  filter(n_nhoods > 2) |> 
+  select(gini_crime_unweighted) |> 
+  pull() |> 
+  summary() |>
+  round(digits = 2)
+
+municipality_gini_unweighted_min3nhoods_mean <-
+  municipality_gini_unweighted_min3nhoods_summary["Mean"]
+
+municipality_gini_unweighted_min3nhoods_1quartile <-
+  municipality_gini_unweighted_min3nhoods_summary["1st Qu."]
+
+municipality_gini_unweighted_min3nhoods_3quartile <-
+  municipality_gini_unweighted_min3nhoods_summary["3rd Qu."]
+
+
+# Scatterplot crime and crime Gini-coefficient -----
+gini_crime_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_crime, gini_crime_unweighted) |>
+  cor()
+gini_crime_cor <- gini_crime_cor[2,1]
+
+gini_crime_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_crime, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= n_crime, y = gini_crime_unweighted), size = 1) +
+  xlab("Geregistreerde misdaad") + 
+  ylab("Gini") + 
+  ggtitle(paste0("Gini-coëfficiënt en omvang misdaad. R2 = ",
+                 round(gini_crime_cor, digits = 2)
+  ))
+gini_crime_scatter_ggp
+ggsave_svg(ggp = gini_crime_scatter_ggp, output = OUTPUT)
+
+# Scatterplot population and crime Gini-coefficient ----
+gini_crimerate_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(muni_crime_rate, gini_crime_unweighted) |>
+  cor()
+gini_crimerate_cor <- gini_crimerate_cor[2,1]
+
+gini_crimerate_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(muni_crime_rate, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= muni_crime_rate, y = gini_crime_unweighted), size = 1) +
+  xlab("(10000) x Geregistreerde misdaad / bevolking") + 
+  ylab("Gini") +  
+  ggtitle(paste0("Gini-coëfficiënt en relative omvang misdaad. R2 = ",
+                  round(gini_crimerate_cor, digits = 2)
+  ))
+gini_crimerate_scatter_ggp
+ggsave_svg(ggp = gini_crimerate_scatter_ggp, output = OUTPUT)
+
+# Scatterplot population and number of neighborhoods ---------------------------
+gini_nhoods_cor <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_nhoods, gini_crime_unweighted) |>
+  cor()
+gini_nhoods_cor <- gini_nhoods_cor[2,1]
+gini_nhoods_cor
+
+gini_nhoods_scatter_ggp <-
+  municipality_gini_df |>
+  filter(n_nhoods > 2) |>
+  select(n_nhoods, gini_crime_unweighted) |> 
+  ggplot() +
+  geom_point(aes(x= n_nhoods, y = gini_crime_unweighted), size = 1) +
+  xlab("Aantal buurten") + 
+  ylab("Gini") +  
+  ggtitle(paste0("Gini-coëfficiënt en aantal buurten. R2 = ",
+                 round(gini_nhoods_cor, digits = 2)
+  ))
+gini_nhoods_scatter_ggp
+ggsave_svg(ggp = gini_nhoods_scatter_ggp, output = OUTPUT)
+
+
+
+
+
+```
+
+```{r}
+#| label: map-gini
+#| include: false
+# Map Gini coefficients ----
+
+# Create map of Gini (crime)
+# NOTE: This is Figure 3 in the reporting article
+map_gini_crime_unweighted_ggp <-
+  municipality_gini_sf |>
+  mutate(gini_crime_unweighted = if_else(condition = n_nhoods > 2,
+                                         true = gini_crime_unweighted,
+                                         false = NA)) |>
+  #filter(n_nhoods > 2) |>
+  ggplot() +
+  geom_sf(aes(fill = gini_crime_unweighted )) +
+#   scale_fill_steps2() +
+#   scale_fill_stepsn(
+#   colours = c("white", "lightgreen", "green", "orange", "red", "black"),
+#   values = NULL,
+#   space = "Lab",
+#   na.value = "grey50",
+#   guide = "coloursteps",
+#   aesthetics = "fill"
+# ) +
+  scale_fill_viridis(na.value = "lightgrey", direction = -1) +
+  labs(fill = "Gini-coëfficiënt") +
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        rect = element_blank())
+map_gini_crime_unweighted_ggp
+
+ggsave_svg(ggp = map_gini_crime_unweighted_ggp, output = OUTPUT)  
+
+
+
+regional_above_average_ginis_df <-
+  municipality_gini_df |>
+  mutate(region = case_match(
+    province_lab,
+    c("Groningen", "Friesland", "Drenthe") ~ "Noord",
+    c("Limburg")          ~ "Zuid",
+    .default = "Overige")
+    ) |> 
+  mutate(above_average = gini_crime_unweighted > 
+           municipality_gini_unweighted_min3nhoods_mean) |>
+  group_by(region) |>
+  summarize(percentage_above_NLmean = 100 * sum(above_average) / n())
+
+NorthAboveAverage <-
+  regional_above_average_ginis_df |> filter(region == "Noord") |> 
+  select(percentage_above_NLmean) |> pull() |> round(0)
+SouthAboveAverage <-
+  regional_above_average_ginis_df |> filter(region == "Zuid") |> 
+  select(percentage_above_NLmean) |> pull() |> round(0)
+OtherAboveAverage <-
+  regional_above_average_ginis_df |> filter(region == "Overige") |> 
+  select(percentage_above_NLmean) |> pull() |> round(0)
+
+
+TotalCrimesAnalyzed <-
+  crime_2023_df |> ungroup() |> summarize(crime = sum(crime)) |> pull()
+
+
+
+# End of script ----------------------------------------------------------------
+sessionInfo()
+
+
+
+
+
+```
+
+**In de serie 'De staat van de misdaad' analyseren onderzoekers van het Nederlands Studiecentrum Criminaliteit en Rechtshandhaving (NSCR) ontwikkelingen rond misdaad en rechtshandhaving. In deze tweede aflevering behandelen zij de vraag in hoeverre misdaad in gemeenten ongelijk verdeeld is tussen buurten.**
+
+In 1906 stelde de Italiaanse wiskundige Vilfredo Pareto vast dat 80 procent van de bezittingen in Italië in handen was van de rijkste 20 procent van de bevolking. Het naar hem genoemde *Pareto principe* verwijst naar dit soort ongelijke verdelingen[^1]. Het Pareto principe is niet alleen van toepassing op de verdeling van vermogen, maar ook op veel andere verschijnselen. Een voorbeeld op het terrein van de misdaad is dat een klein deel van de daders ('veelplegers', 'notoire recidivisten' of 'draaideurcriminelen') een groot deel van de misdrijven pleegt.
+
+[^1]: Het Pareto principe wordt ook wel aangeduid als de *80-20 regel*, maar die term is om meerdere redenen verwarrend en zullen we hier niet gebruiken.
+
+In deze bijdrage onderzoeken we in hoeverre binnen Nederlandse gemeenten de geregistreerde misdaad ongelijk verdeeld is tussen de buurten van die gemeenten. Volgt die verdeling het Pareto principe en vinden de meeste misdrijven in slechts enkele buurten plaats?
+
+Niet alleen misdaad als zodanig is maatschappelijk gezien schadelijk, ook een ongelijke verdeling van misdaad is ongewenst. Het benadeelt bewoners en andere gebruikers van de meest getroffen buurten onevenredig zwaar, en leidt ook tot stigmatisering en mogelijk tot vermijding, isolatie en achteruitgang van die buurten. Gelukkig kent Nederland geen *no-go areas* waar misdaad floreert en de politie geen gezag heeft. Echter, ook minder uitgesproken vormen van ongelijkheid kunnen toenemen en op termijn schadelijk worden.
+
+In onze analyse van de misdaadverdeling tussen buurten beperken we ons tot de zogenoemde 'brengdelicten' volgens de [definitie van het CBS](https://www.cbs.nl/nl-nl/onze-diensten/methoden/begrippen/brengdelict). Dit zijn door de politie geregistreerde strafbare feiten met een direct aanwijsbaar slachtoffer, voornamelijk de misdrijven uit het Wetboek van Strafrecht. In 2023 waren dit `r format(TotalCrimesAnalyzed, big.mark = ",", trim = TRUE, scientific = FALSE)` misdrijven. We beperken ons tot brengdelicten omdat de registratie van de overige delicten, zoals bijvoorbeeld rijden onder invloed en drugs- en wapenmisdrijven, sterk bepaald worden door de prioriteiten en de inzet van politie en justitie. Deze zogenoemde 'haaldelicten' zijn daarom minder goede indicatoren voor hoeveel en waar dit soort misdrijven daadwerkelijk gepleegd worden[^2]. Overigens zijn ook de geregistreerde 'brengdelicten' niet perfect, want lang niet alle misdrijven worden door slachtoffers bij de politie aangegeven. Het valt niet uit te sluiten dat aangiftepercentages, ook bij dezelfde soorten misdrijven, tussen buurten verschillen. We benadrukken verder dat een 'buurt' in deze bijdrage steeds de buurt is waar een misdrijf wordt gepleegd. Dat is lang niet altijd de woonbuurt van het slachtoffer (of van de dader).
+
+[^2]: Zowel het besluit om de analyse te beperken tot brengdelicten als de selectie van brengdelicten hebben we gemaakt op initiatief van en in overleg met de kernredactie van Secondant.
+
+Vanzelfsprekend doet het samenvoegen van zeer uiteenlopende soorten misdrijven geen recht aan de onderliggende verschillen in aard en ernst, bijvoorbeeld tussen geweldsmisdrijven en vermogensmisdrijven. Een dergelijke verfijning vereist meer ruimte dan hier beschikbaar is.
+
+# Het meten van ongelijkheid: Lorenz-curve en Gini-coëfficiënt
+
+Het Pareto principe laat zich goed in beeld brengen met behulp van de zogenoemde Lorenz-curve, vernoemd naar de Amerikaanse econoom Max Otto Lorenz. Als voorbeeld laat @fig-random-lorenz_unweighted de Lorenz-curve zien van de misdaadverdeling in de willekeurig gekozen gemeente Katwijk. De doorgetrokken gebogen lijn is de Lorenz-curve.
+
+```{r}
+#| label: fig-random-lorenz_unweighted
+#| echo: false
+#| warning: false
+#| fig-cap: "Lorenz curve van verdeling van misdaad over buurten in Katwijk, 2023"
+municipality_random_unweighted_lorenz_ggp
+```
+
+Hoe 'lezen' we @fig-random-lorenz_unweighted? Dat laat zich het beste uitleggen met een voorbeeld. Met behulp van de gestippelde hulplijnen zien we dat bij een waarde van 20 op de X-as een waarde hoort van ruim 40 op de Y-as. Dit betekent dat in 20 procent van de Katwijkse buurten met de meeste misdaad ruim 40 procent van de geregistreerde misdrijven plaatsvindt. Bij 60 op de X-as hoort ruim 80 op de Y-as, dus in 60 procent van de buurten met de meeste misdaad vindt ruim 80 procent van de misdrijven plaats (oftewel: ruim 80 procent van de misdrijven vindt plaats in 60 procent van de buurten).
+
+De diagonale onderbroken lijn in @fig-random-lorenz_unweighted vertegenwoordigt de denkbeeldige situatie van volledige gelijkheid. Als de Lorenz-curve die lijn zou volgen dan zou de misdaad evenredig over alle buurten verdeeld zijn. In deze denkbeeldige situatie zou dus bijvoorbeeld in 20 procent van de buurten ook 20 procent van de misdrijven geregistreerd worden.
+
+De omvang van het gebied tussen deze diagonale onderbroken lijn en de Lorenz-curve geeft aan hoe ongelijk de misdaadverdeling tussen buurten is, en kan worden uitgedrukt met de Gini-coëfficiënt, een maatstaf die vernoemd is naar de bedenker ervan, de Italiaanse wetenschapper Corado Gini. De Gini-coëfficiënt is een getal dat kan variëren tussen 0 (volledig gelijke verdeling) en 1 (volledig ongelijke verdeling). De Gini-coëfficiënt in Katwijk in 2023 bedroeg `r round(municipality_random_selection$gini_crime_unweighted, digits = 2)`.
+
+# Ongelijkheid tussen buurten in Nederlandse gemeenten
+
+Katwijk is slechts een van de `r municipality_gini_df |> nrow()` gemeenten die Nederland in 2023 telde. In het vervolg van deze bijdrage onderzoeken we de ongelijkheid in misdaad tussen buurten (de Gini-coëfficiënten) in `r municipality_gini_df |> filter(n_nhoods > 2) |> nrow()` gemeenten. Vier gemeenten (Renswoude, Rozendaal, Schiermonnikoog en Vlieland) laten we buiten beschouwing omdat ze elk uit slechts twee buurten bestaan[^3].
+
+[^3]: Ook van de gemeenten met slechts twee buurten kan een Gini-coëfficiënt berekend worden, maar de waarden zijn alle vier extreem klein (0 of bijna 0) en vertekenen de uitkomsten daarom sterk.
+
+In @fig-histogram-gini tonen we de verdeling van de Gini-coëfficiënten. De Gini-coëfficiënt bedraagt gemiddeld `r municipality_gini_unweighted_min3nhoods_mean`. Omdat er noch in Nederland noch elders op deze wijze onderzoek naar is gedaan, is niet goed te beoordelen of deze waarde op veel of op weinig ongelijkheid duidt. De variatie tussen gemeenten lijkt in ieder geval gering, want in de helft van de gemeenten ligt de waarde van de Gini-coëfficiënt tussen `r formatC(municipality_gini_unweighted_min3nhoods_1quartile, digits = 2, format = "f")` en `r formatC(municipality_gini_unweighted_min3nhoods_3quartile, digits = 2, format = "f")`, al komen er wel uitschieters naar boven en beneden voor. Katwijk, de gemeente uit het voorbeeld hierboven, is met een Gini-coëfficiënt van `r round(municipality_random_selection$gini_crime_unweighted, digits = 2)` zo'n uitschieter. In vergelijking met de rest van Nederland zijn de misdrijven in Katwijk zeer gelijkmatig over buurten verdeeld.
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-histogram-gini
+#| fig-cap: "Frequentieverdeling Gini-coëfficiënten van misdaadverdeling over buurten in 338 gemeenten, 2023."
+gini_crime_unweighted_histogram_min3nhoods_ggp
+```
+
+Waar liggen de gemeenten met veel en met weinig ongelijkheid? In @fig-map-gini tonen we de kaart van Nederland met gemeenten gekleurd op basis van hun Gini-coefficiënt[^4].
+
+[^4]: De vier gemeenten die we buiten beschouwing laten zijn grijs gekleurd.
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-map-gini
+#| fig-cap: "Kaart van Gini-coëfficiënten van misdaadverdeling over buurten in 338 gemeenten, 2023."
+map_gini_crime_unweighted_ggp
+```
+
+Er tekent zich geen sterk patroon af, al is de ongelijkheid in de noordelijke en zuidelijk gelegen gemeentes op het eerste gezicht wat groter dan elders. Getalsmatig lijkt dat wel te kloppen, want in de drie noordelijke provincies (Groningen, Friesland en Drenthe) heeft `r NorthAboveAverage` procent van de gemeenten een Gini-coëfficiënt boven het landelijk gemiddelde van `r municipality_gini_unweighted_min3nhoods_mean` en in Limburg geldt dat voor `r SouthAboveAverage` procent van de gemeenten. In de rest van Nederland heeft slechts `r OtherAboveAverage` procent van de gemeenten een bovengemiddelde Gini-coëfficiënt.
+
+Het observeerde geografische patroon roept vragen op naar mogelijke verklaringen voor de ongelijke verdeling van misdaad tussen buurten in gemeenten. Mogelijk moeten die gezocht moeten worden in bestaande demografische, sociale en economische ongelijkheden tussen buurten. Zo speelt de verdeling van inwoners over buurten waarschijnlijk een belangrijke rol, want het aantal misdrijven en het aantal buurtbewoners hangt met elkaar samen: in buurten met meer inwoners vinden gemiddeld meer misdrijven plaats.
+
+Ook de functies van buurten spelen een grote rol. Uit onderzoek blijkt dat veel misdaad plaatsvind in buurten met veel 'bezoekers', dus mensen die er niet wonen maar er wel komen voor werk, ontspanning of het doen van inkopen. Die buurten zijn vaak stadscentra met concentraties van detailhandel en horeca.
+
+Aanvullende analyses op basis van de hier gebruikte gegevens laten overigens zien dat de Gini-coëfficiënt niet samenhangt met het aantal inwoners of met de hoeveelheid geregistreerde criminaliteit in een gemeente.
+
+# Verantwoording
+
+Net als voor [de eerste aflevering van de 'Staat van de misdaad'](https://ccv-secondant.nl/platform/article/criminaliteit-gedaald-maar-overlast-gestegen) maken we ook voor deze tweede aflevering uitsluitend gebruik van openbare gegevens van de [politie](https://data.politie.nl/) en het [Centraal Bureau voor de Statistiek](https://opendata.cbs.nl/). Bij de gedetailleerde geografische indeling (buurten) wordt uitgegaan van de buurtindeling per 1 januari 2024. In verband met onthullingsrisico worden aantallen zedendelicten (inclusief kinderporno en kinderprostitutie) niet gepubliceerd. Deze blijven hier dus ook buiten beschouwing. De gebruikte bestanden zijn eenvoudig online te vinden via het [dataregister](https://data.overheid.nl/) van de Nederlandse overheid, door te zoeken op "859843NED" (bevolking), "47018NED" (geregistreerde misdaad), "85516NED" (gemeenten naar provincie) en "wijk- en buurtkaart 2024" (gemeente- en buurtgrenzen). Details van de gegevensbewerking en -analyse zijn te vinden op [GitHub](https://github.com/bernasco/misdaad_concentratie). Wie benieuwd is naar de uitkomsten van specifieke gemeenten kan ze vinden in [deze tabel](https://github.com/bernasco/misdaad_concentratie/tree/main/output/gemeenten_NL_gini.csv), waarin per gemeente zijn opgenomen: de naam en het nummer van de gemeente, het aantal inwoners per 1 januari 2024, het aantal geregistreerde misdrijven in 2023, het aantal buurten per 1 januari 2024, de Gini-coëfficiënt en de provincie.
