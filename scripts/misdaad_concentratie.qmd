@@ -299,12 +299,13 @@ population_2024_df <-
 
 # read geometry data
 FILENAME_MUNICIPALTIES_GEO <- "gemeenten_2023_v1.shp"
+FILENAME_MUNICIPALTIES_GEO <- "municipalities_2024.gpkg"
+
 geometry_municipalities_sf <- 
   sf::st_read(dsn = file.path(DATA_GEO, FILENAME_MUNICIPALTIES_GEO)) |>
-  # exclude bodies of water
-  dplyr::filter(H2O == "NEE", GM_NAAM != "Buitenland") |>
   # Create municipality ID (mumeric part)
-  mutate(municipality_id = trimws(substring(GM_CODE, 3, 6)))
+  dplyr::mutate(municipality_id = trimws(substring(gm_code, 3, 6))) |>
+  dplyr::select(-OBJECTID, -Shape_Length, -Shape_Area, -gm_code)
 
 
 # merge crime and population data ----------------------------------------------
@@ -743,15 +744,6 @@ map_gini_crime_unweighted_ggp <-
   #filter(n_nhoods > 2) |>
   ggplot() +
   geom_sf(aes(fill = gini_crime_unweighted )) +
-#   scale_fill_steps2() +
-#   scale_fill_stepsn(
-#   colours = c("white", "lightgreen", "green", "orange", "red", "black"),
-#   values = NULL,
-#   space = "Lab",
-#   na.value = "grey50",
-#   guide = "coloursteps",
-#   aesthetics = "fill"
-# ) +
   scale_fill_viridis(na.value = "lightgrey", direction = -1) +
   labs(fill = "Gini-coëfficiënt") +
   theme(axis.text.x = element_blank(),
@@ -864,7 +856,7 @@ Waar liggen de gemeenten met veel en met weinig ongelijkheid? In @fig-map-gini t
 map_gini_crime_unweighted_ggp
 ```
 
-Er tekent zich geen sterk patroon af, al is de ongelijkheid in de noordelijke en zuidelijk gelegen gemeentes op het eerste gezicht wat groter dan elders. Getalsmatig lijkt dat wel te kloppen, want in de drie noordelijke provincies (Groningen, Friesland en Drenthe) heeft `r NorthAboveAverage` procent van de gemeenten een Gini-coëfficiënt boven het landelijk gemiddelde van `r municipality_gini_unweighted_min3nhoods_mean` en in Limburg geldt dat voor `r SouthAboveAverage` procent van de gemeenten. In de rest van Nederland heeft slechts `r OtherAboveAverage` procent van de gemeenten een bovengemiddelde Gini-coëfficiënt.
+Er tekent zich geen sterk patroon af, al is de ongelijkheid in gemeenten in het noorden en in het zuiden op het eerste gezicht wat groter dan elders. Getalsmatig lijkt dat wel te kloppen, want in de drie noordelijke provincies (Groningen, Friesland en Drenthe) heeft `r NorthAboveAverage` procent van de gemeenten een Gini-coëfficiënt boven het landelijk gemiddelde van `r municipality_gini_unweighted_min3nhoods_mean` en in Limburg geldt dat voor `r SouthAboveAverage` procent van de gemeenten. In de rest van Nederland heeft slechts `r OtherAboveAverage` procent van de gemeenten een bovengemiddelde Gini-coëfficiënt.
 
 Het observeerde geografische patroon roept vragen op naar mogelijke verklaringen voor de ongelijke verdeling van misdaad tussen buurten in gemeenten. Mogelijk moeten die gezocht moeten worden in bestaande demografische, sociale en economische ongelijkheden tussen buurten. Zo speelt de verdeling van inwoners over buurten waarschijnlijk een belangrijke rol, want het aantal misdrijven en het aantal buurtbewoners hangt met elkaar samen: in buurten met meer inwoners vinden gemiddeld meer misdrijven plaats.
 

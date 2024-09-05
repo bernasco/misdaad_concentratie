@@ -1,0 +1,15 @@
+"odata.type","ID","Position","ParentID","Type","Key","Title","Description","MapYear","ReleasePolicy","Datatype","Unit","Decimals","Default","PresentationType"
+"Cbs.OData.Dimension",0,0,,"Dimension","SoortMisdrijf","Soort misdrijf","",,,,,,,
+"Cbs.OData.GeoDetail",1,1,,"GeoDetail","WijkenEnBuurten","Wijken en buurten","Wijken en buurten (indeling 2024)",2019,,,,,,
+"Cbs.OData.TimeDimension",2,2,,"TimeDimension","Perioden","Perioden","",,FALSE,,,,,
+"Cbs.OData.Topic",3,3,,"Topic","GeregistreerdeMisdrijven_1","Geregistreerde misdrijven","Totaal van de geregistreerde misdrijven, bron is de politieregistratie Basis Voorziening Informatie (BVI). Zie ook 4. Bronnen en methoden. Een geregistreerd misdrijf is een misdrijf, door de politie vastgelegd in een proces-verbaal van aangifte of in een ambtshalve opgemaakt proces-verbaal. Misdrijven zijn de feiten, strafbaar gesteld in het Wetboek van Strafrecht en in tal van bijzondere wetten, waaronder de Opiumwet, de Wegenverkeerswet en de Wet Wapens en munitie.",,,"Long","aantal",0,"Zero","Absolute"
+"Cbs.OData.TopicGroup",4,,,"TopicGroup","","Regioaanduiding","De gemeenten in Nederland zijn onderverdeeld in wijken en buurten. Buurten vormen het laagste regionale niveau. Wijken zijn optellingen van één of meer aaneengesloten buurten. De gemeente bepaalt zelf de indeling in wijken en buurten. Het CBS coördineert landelijk deze indeling.
+
+Wijk:
+Onderdeel van een gemeente waarin een bepaalde vorm van bodemgebruik of bebouwing overheerst. Bijvoorbeeld: industriegebied, woongebied met hoogbouw of laagbouw. Een wijk bestaat uit één of meerdere buurten. 
+
+Buurt:
+Onderdeel van een gemeente, dat vanuit bebouwingsoogpunt of sociaaleconomische structuur homogeen is afgebakend. Homogeen wil zeggen dat één functie dominant is, bijvoorbeeld woonfunctie (woongebied), werkfunctie (industriegebied) of recreatieve functie (natuurgebied). Functies kunnen echter ook gemengd voorkomen.
+",,,,,,,
+"Cbs.OData.Topic",5,4,4,"Topic","Gemeentenaam_2","Gemeentenaam","De naam van de bestuurlijke gemeente. Deze naam volgt de officiële schrijfwijze.",,,"String","naam",0,"Missing",""
+"Cbs.OData.Topic",6,5,4,"Topic","SoortRegio_3","Soort regio","De gekozen regioaanduiding betreft: Gemeente, Wijk of Buurt.",,,"String","omschrijving",0,"Missing",""

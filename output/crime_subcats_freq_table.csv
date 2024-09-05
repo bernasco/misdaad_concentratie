@@ -1,0 +1,55 @@
+crimetype_lab,crime,brengdelict
+1.1.1 Diefstal/inbraak woning,22767,1
+1.1.2 Diefstal/inbraak box/garage/schuur,10997,1
+1.2.1 Diefstal uit/vanaf motorvoertuigen,43478,1
+1.2.2 Diefstal van motorvoertuigen,9292,1
+"1.2.3 Diefstal van brom-, snor-, fietsen",96744,1
+1.2.4 Zakkenrollerij,12194,1
+1.2.5 Diefstal af/uit/van ov. voertuigen,28312,1
+1.3.1 Ongevallen (weg),77450,0
+"1.4.2 Moord, doodslag",2539,1
+1.4.3 Openlijk geweld (persoon),4028,1
+1.4.4 Bedreiging,23296,1
+1.4.5 Mishandeling,39160,1
+1.4.6 Straatroof,2391,1
+1.4.7 Overval,537,1
+1.5.2 Diefstallen (water),788,1
+1.6.1 Brand/ontploffing,4155,1
+1.6.2 Overige vermogensdelicten,82764,1
+1.6.3 Mensenhandel,642,1
+2.1.1 Drugs/drankoverlast,170,0
+2.2.1 Vernieling cq. zaakbeschadiging,69925,1
+2.4.1 Burengerucht (relatieproblemen),228,0
+2.4.2 Huisvredebreuk,3237,1
+2.5.1 Diefstal/inbraak bedrijven enz.,12942,1
+2.5.2 Winkeldiefstal,44841,1
+2.6.1 Inrichting Wet Milieubeheer,49,0
+2.6.10 Bestrijdingsmiddelen,3,0
+2.6.11 Natuur en landschap,0,0
+2.6.12 Ruimtelijke ordening,9,0
+2.6.13 Dieren,703,0
+2.6.14 Voedselveiligheid,1,0
+2.6.2 Bodem,129,0
+2.6.3 Water,8,0
+2.6.4 Afval,106,0
+2.6.5 Bouwstoffen,5,0
+2.6.7 Mest,15,0
+2.6.8 Transport gevaarlijke stoffen,361,0
+2.6.9 Vuurwerk,922,0
+2.7.2 Bijzondere wetten,2441,0
+2.7.3 Leefbaarheid (overig),1068,1
+3.1.1 Drugshandel,13407,0
+3.1.2 Mensensmokkel,59,1
+3.1.3 Wapenhandel,6627,0
+3.3.2 Onder invloed (lucht),7,0
+3.3.5 Lucht (overig),0,0
+3.4.2 Onder invloed (water),33,0
+3.5.2 Onder invloed (weg),42306,0
+3.5.5 Weg (overig),11963,0
+3.6.4 Aantasting openbare orde,7893,1
+3.7.1 Discriminatie,503,1
+3.7.2 Vreemdelingenzorg,158,0
+3.7.4 Cybercrime,12048,1
+3.9.1 Horizontale fraude,87757,1
+3.9.2 Verticale fraude,349,1
+3.9.3 Fraude (overig),496,1

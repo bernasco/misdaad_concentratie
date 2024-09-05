@@ -1,0 +1,343 @@
+naam,nummer,bevolking,misdaad,buurten,gini_misdaad,provincie
+'s-Gravenhage,0518,566175,28524,114,0.47,Zuid-Holland
+'s-Hertogenbosch,0796,160765,7227,108,0.64,Noord-Brabant
+Aa en Hunze,1680,25860,491,54,0.77,Drenthe
+Aalsmeer,0358,33285,797,9,0.46,Noord-Holland
+Aalten,0197,27285,344,29,0.62,Gelderland
+Achtkarspelen,0059,28225,442,24,0.7,Friesland
+Alblasserdam,0482,20325,389,29,0.54,Zuid-Holland
+Albrandswaard,0613,26440,867,26,0.5,Zuid-Holland
+Alkmaar,0361,112325,4587,66,0.58,Noord-Holland
+Almelo,0141,74305,3286,71,0.52,Overijssel
+Almere,0034,226425,6945,238,0.56,Flevoland
+Alphen aan den Rijn,0484,114950,2875,100,0.51,Zuid-Holland
+Alphen-Chaam,1723,10455,218,19,0.43,Noord-Brabant
+Altena,1959,58255,1094,63,0.58,Noord-Brabant
+Ameland,0060,3845,78,7,0.4,Friesland
+Amersfoort,0307,161825,6405,145,0.51,Utrecht
+Amstelveen,0362,95015,3115,47,0.36,Noord-Holland
+Amsterdam,0363,931300,69225,517,0.5,Noord-Holland
+Apeldoorn,0200,168225,5428,95,0.6,Gelderland
+Arnhem,0202,167635,8786,83,0.49,Gelderland
+Assen,0106,69720,3131,109,0.63,Drenthe
+Asten,0743,17300,492,28,0.55,Noord-Brabant
+Baarle-Nassau,0744,7065,175,10,0.69,Noord-Brabant
+Baarn,0308,25065,767,21,0.52,Utrecht
+Barendrecht,0489,48700,1307,62,0.49,Zuid-Holland
+Barneveld,0203,62600,1140,47,0.59,Gelderland
+Beek (L.),0888,16215,534,8,0.79,Limburg
+Beekdaelen,1954,35905,722,29,0.53,Limburg
+Beesel,0889,13390,272,8,0.75,Limburg
+Berg en Dal,1945,35490,959,41,0.57,Gelderland
+Bergeijk,1724,19215,393,59,0.5,Noord-Brabant
+Bergen (L.),0893,13145,268,16,0.58,Limburg
+Bergen (NH.),0373,29940,711,36,0.53,Noord-Holland
+Bergen op Zoom,0748,69680,2789,38,0.52,Noord-Brabant
+Berkelland,1859,43945,734,72,0.46,Gelderland
+Bernheze,1721,32535,579,53,0.51,Noord-Brabant
+Best,0753,31215,881,19,0.48,Noord-Brabant
+Beuningen,0209,26730,469,44,0.53,Gelderland
+Beverwijk,0375,42880,1438,36,0.49,Noord-Holland
+Bladel,1728,20985,385,25,0.4,Noord-Brabant
+Blaricum,0376,12725,257,9,0.74,Noord-Holland
+Bloemendaal,0377,23780,751,22,0.6,Noord-Holland
+Bodegraven-Reeuwijk,1901,36575,1163,54,0.63,Zuid-Holland
+Boekel,0755,11300,226,8,0.54,Noord-Brabant
+Borger-Odoorn,1681,26015,427,58,0.49,Drenthe
+Borne,0147,24655,580,15,0.58,Overijssel
+Borsele,0654,23115,306,32,0.64,Zeeland
+Boxtel,0757,33975,912,19,0.73,Noord-Brabant
+Breda,0758,188080,8523,56,0.5,Noord-Brabant
+Bronckhorst,1876,36125,459,45,0.66,Gelderland
+Brummen,0213,21305,425,39,0.6,Gelderland
+Brunssum,0899,27765,883,45,0.49,Limburg
+Bunnik,0312,16115,312,8,0.6,Utrecht
+Bunschoten,0313,22630,404,10,0.5,Utrecht
+Buren,0214,27765,450,39,0.58,Gelderland
+Capelle aan den IJssel,0502,67920,1913,79,0.49,Zuid-Holland
+Castricum,0383,36370,954,19,0.51,Noord-Holland
+Coevorden,0109,35710,847,68,0.7,Drenthe
+Cranendonck,1706,20855,819,20,0.72,Noord-Brabant
+Culemborg,0216,29935,646,20,0.38,Gelderland
+Dalfsen,0148,29685,358,36,0.44,Overijssel
+Dantumadiel,1891,19140,225,17,0.75,Friesland
+De Bilt,0310,43695,1446,24,0.56,Utrecht
+De Fryske Marren,1940,51940,821,70,0.65,Friesland
+De Ronde Venen,0736,45815,915,25,0.45,Utrecht
+De Wolden,1690,24560,347,40,0.72,Drenthe
+Delft,0503,109590,4455,91,0.53,Zuid-Holland
+Den Helder,0400,56440,2487,65,0.54,Noord-Holland
+Deurne,0762,33175,897,29,0.52,Noord-Brabant
+Deventer,0150,103420,3912,69,0.57,Overijssel
+Diemen,0384,32965,1298,37,0.52,Noord-Holland
+Dijk en Waard,1980,90040,2651,69,0.58,Noord-Holland
+Dinkelland,1774,26735,302,46,0.5,Overijssel
+Doesburg,0221,11070,211,11,0.61,Gelderland
+Doetinchem,0222,59565,1697,84,0.63,Gelderland
+Dongen,0766,27095,549,17,0.6,Noord-Brabant
+Dordrecht,0505,122090,4820,132,0.55,Zuid-Holland
+Drechterland,0498,20505,392,27,0.6,Noord-Holland
+Drimmelen,1719,28205,610,38,0.48,Noord-Brabant
+Dronten,0303,44365,1042,42,0.57,Flevoland
+Druten,0225,19605,329,26,0.42,Gelderland
+Duiven,0226,24870,549,14,0.43,Gelderland
+Echt-Susteren,1711,32030,870,58,0.66,Limburg
+Edam-Volendam,0385,36915,563,29,0.52,Noord-Holland
+Ede,0228,123525,3636,71,0.54,Gelderland
+Eemnes,0317,9765,162,10,0.61,Utrecht
+Eemsdelta,1979,45080,1256,92,0.67,Groningen
+Eersel,0770,20200,407,24,0.53,Noord-Brabant
+Eijsden-Margraten,1903,26030,441,34,0.67,Limburg
+Eindhoven,0772,246385,14940,116,0.58,Noord-Brabant
+Elburg,0230,23900,446,22,0.38,Gelderland
+Emmen,0114,109370,3395,83,0.77,Drenthe
+Enkhuizen,0388,18900,590,19,0.6,Noord-Holland
+Enschede,0153,161740,7340,70,0.56,Overijssel
+Epe,0232,33170,612,29,0.43,Gelderland
+Ermelo,0233,27860,607,20,0.68,Gelderland
+Etten-Leur,0777,45255,1270,47,0.5,Noord-Brabant
+Geertruidenberg,0779,22065,522,11,0.62,Noord-Brabant
+Geldrop-Mierlo,1771,40735,1029,15,0.43,Noord-Brabant
+Gemert-Bakel,1652,31440,712,24,0.54,Noord-Brabant
+Gennep,0907,17795,386,16,0.6,Limburg
+Gilze en Rijen,0784,27355,767,26,0.53,Noord-Brabant
+Goeree-Overflakkee,1924,51860,902,58,0.43,Zuid-Holland
+Goes,0664,39680,1396,29,0.75,Zeeland
+Goirle,0785,24345,704,31,0.55,Noord-Brabant
+Gooise Meren,1942,60365,1938,56,0.47,Noord-Holland
+Gorinchem,0512,38670,1057,28,0.64,Zuid-Holland
+Gouda,0513,75760,2814,51,0.57,Zuid-Holland
+Groningen,0014,243790,12700,151,0.74,Groningen
+Gulpen-Wittem,1729,14065,312,29,0.73,Limburg
+Haaksbergen,0158,24335,355,29,0.54,Overijssel
+Haarlem,0392,167670,8009,111,0.5,Noord-Holland
+Haarlemmermeer,0394,163115,5143,97,0.56,Noord-Holland
+Halderberge,1655,31185,863,20,0.53,Noord-Brabant
+Hardenberg,0160,62925,1190,74,0.69,Overijssel
+Harderwijk,0243,49390,1357,61,0.54,Gelderland
+Hardinxveld-Giessendam,0523,18760,287,25,0.64,Zuid-Holland
+Harlingen,0072,16230,349,12,0.72,Friesland
+Hattem,0244,12630,254,10,0.38,Gelderland
+Heemskerk,0396,39455,1079,38,0.6,Noord-Holland
+Heemstede,0397,27580,916,14,0.47,Noord-Holland
+Heerde,0246,19215,271,15,0.71,Gelderland
+Heerenveen,0074,51790,1388,31,0.7,Friesland
+Heerlen,0917,87460,4433,57,0.48,Limburg
+Heeze-Leende,1658,16800,369,12,0.71,Noord-Brabant
+Heiloo,0399,24320,619,20,0.5,Noord-Holland
+Hellendoorn,0163,36235,534,39,0.51,Overijssel
+Helmond,0794,95870,4500,44,0.49,Noord-Brabant
+Hendrik-Ido-Ambacht,0531,32695,730,12,0.46,Zuid-Holland
+Hengelo (O.),0164,83060,2904,62,0.59,Overijssel
+Het Hogeland,1966,48200,803,63,0.51,Groningen
+Heumen,0252,16835,368,19,0.66,Gelderland
+Heusden,0797,46015,977,17,0.48,Noord-Brabant
+Hillegom,0534,22820,568,22,0.56,Zuid-Holland
+Hilvarenbeek,0798,15960,391,11,0.74,Noord-Brabant
+Hilversum,0402,94440,3243,43,0.54,Noord-Holland
+Hoeksche Waard,1963,90245,1357,41,0.52,Zuid-Holland
+Hof van Twente,1735,35445,506,48,0.53,Overijssel
+Hollands Kroon,1911,49535,860,67,0.53,Noord-Holland
+Hoogeveen,0118,56585,1674,48,0.62,Drenthe
+Hoorn,0405,75640,2666,74,0.55,Noord-Holland
+Horst aan de Maas,1507,43925,1086,49,0.56,Limburg
+Houten,0321,50825,1013,61,0.49,Utrecht
+Huizen,0406,41195,766,30,0.55,Noord-Holland
+Hulst,0677,27330,560,48,0.57,Zeeland
+IJsselstein,0353,33415,952,31,0.47,Utrecht
+Kaag en Braassem,1884,29170,463,27,0.5,Zuid-Holland
+Kampen,0166,56180,1282,36,0.64,Overijssel
+Kapelle,0678,13010,269,6,0.75,Zeeland
+Katwijk,0537,66970,1869,42,0.38,Zuid-Holland
+Kerkrade,0928,45305,1788,18,0.39,Limburg
+Koggenland,1598,23585,412,60,0.51,Noord-Holland
+Krimpen aan den IJssel,0542,29630,486,6,0.33,Zuid-Holland
+Krimpenerwaard,1931,57775,1055,68,0.58,Zuid-Holland
+Laarbeek,1659,23215,466,15,0.6,Noord-Brabant
+Land van Cuijk,1982,91730,2096,101,0.62,Noord-Brabant
+Landgraaf,0882,37120,1151,27,0.43,Limburg
+Landsmeer,0415,11665,410,10,0.65,Noord-Holland
+Lansingerland,1621,65610,1603,61,0.5,Zuid-Holland
+Laren (NH.),0417,11435,337,10,0.6,Noord-Holland
+Leeuwarden,0080,128800,5511,131,0.66,Friesland
+Leiden,0546,130095,5364,54,0.41,Zuid-Holland
+Leiderdorp,0547,27745,702,20,0.4,Zuid-Holland
+Leidschendam-Voorburg,1916,78240,2799,43,0.47,Zuid-Holland
+Lelystad,0995,84075,2903,136,0.65,Flevoland
+Leudal,1640,36000,764,32,0.56,Limburg
+Leusden,0327,31695,610,28,0.4,Utrecht
+Lingewaard,1705,47315,828,42,0.43,Gelderland
+Lisse,0553,23455,493,22,0.47,Zuid-Holland
+Lochem,0262,34300,610,36,0.48,Gelderland
+Loon op Zand,0809,23845,660,32,0.49,Noord-Brabant
+Lopik,0331,14725,199,14,0.63,Utrecht
+Losser,0168,23385,375,13,0.65,Overijssel
+Maasdriel,0263,26205,549,24,0.6,Gelderland
+Maasgouw,1641,24400,462,16,0.55,Limburg
+Maashorst,1991,59205,1746,39,0.55,Noord-Brabant
+Maassluis,0556,35825,916,19,0.47,Zuid-Holland
+Maastricht,0935,125305,6242,44,0.56,Limburg
+Medemblik,0420,46015,866,61,0.57,Noord-Holland
+Meerssen,0938,18580,440,14,0.75,Limburg
+Meierijstad,1948,84300,2010,93,0.51,Noord-Brabant
+Meppel,0119,35810,895,46,0.68,Drenthe
+Middelburg (Z.),0687,50015,1798,72,0.74,Zeeland
+Midden-Delfland,1842,19375,390,13,0.67,Zuid-Holland
+Midden-Drenthe,1731,34085,569,48,0.78,Drenthe
+Midden-Groningen,1952,61445,1587,91,0.71,Groningen
+Moerdijk,1709,38080,1106,39,0.62,Noord-Brabant
+Molenlanden,1978,45285,584,114,0.74,Zuid-Holland
+Montferland,1955,36875,593,27,0.67,Gelderland
+Montfoort,0335,13870,276,12,0.76,Utrecht
+Mook en Middelaar,0944,8155,164,5,0.59,Limburg
+Neder-Betuwe,1740,25710,391,18,0.61,Gelderland
+Nederweert,0946,17475,329,15,0.64,Limburg
+Nieuwegein,0356,65955,2691,39,0.36,Utrecht
+Nieuwkoop,0569,29495,449,37,0.67,Zuid-Holland
+Nijkerk,0267,45370,855,33,0.42,Gelderland
+Nijmegen,0268,187050,9634,44,0.54,Gelderland
+Nissewaard,1930,87605,2558,89,0.55,Zuid-Holland
+Noordoost-Friesland,1970,45890,667,97,0.7,Friesland
+Noord-Beveland,1695,7940,139,14,0.62,Zeeland
+Noordenveld,1699,31690,502,35,0.77,Drenthe
+Noordoostpolder,0171,50020,1177,49,0.6,Flevoland
+Noordwijk,0575,45740,1293,44,0.42,Zuid-Holland
+Nuenen Gerwen en Nederwetten,0820,24235,491,10,0.65,Noord-Brabant
+Nunspeet,0302,29080,547,14,0.73,Gelderland
+Oegstgeest,0579,25950,743,15,0.42,Zuid-Holland
+Oirschot,0823,19275,378,15,0.6,Noord-Brabant
+Oisterwijk,0824,32940,724,35,0.53,Noord-Brabant
+Oldambt,1895,39375,1231,50,0.68,Groningen
+Oldebroek,0269,24270,497,26,0.71,Gelderland
+Oldenzaal,0173,31780,776,14,0.53,Overijssel
+Olst-Wijhe,1773,18835,308,23,0.66,Overijssel
+Ommen,0175,19035,320,46,0.66,Overijssel
+Oost Gelre,1586,29985,541,41,0.49,Gelderland
+Oosterhout,0826,57935,1547,44,0.49,Noord-Brabant
+Ooststellingwerf,0085,25825,442,59,0.5,Friesland
+Oostzaan,0431,9695,305,4,0.63,Noord-Holland
+Opmeer,0432,12190,224,46,0.53,Noord-Holland
+Opsterland,0086,30045,402,50,0.5,Friesland
+Oss,0828,94650,3545,106,0.69,Noord-Brabant
+Oude IJsselstreek,1509,39380,721,32,0.73,Gelderland
+Ouder-Amstel,0437,14455,696,7,0.68,Noord-Holland
+Oudewater,0589,10225,151,18,0.65,Utrecht
+Overbetuwe,1734,48915,1080,90,0.57,Gelderland
+Papendrecht,0590,32190,691,34,0.57,Zuid-Holland
+Peel en Maas,1894,45505,953,53,0.54,Limburg
+Pekela,0765,12515,287,5,0.77,Groningen
+Pijnacker-Nootdorp,1926,57935,1279,32,0.45,Zuid-Holland
+Purmerend,0439,95165,2658,31,0.46,Noord-Holland
+Putten,0273,24980,463,13,0.52,Gelderland
+Raalte,0177,38375,609,38,0.5,Overijssel
+Reimerswaal,0703,23310,459,28,0.51,Zeeland
+Renkum,0274,31435,691,54,0.61,Gelderland
+Renswoude,0339,5755,78,2,0.15,Utrecht
+Reusel-De Mierden,1667,13575,261,11,0.64,Noord-Brabant
+Rheden,0275,43655,1196,23,0.76,Gelderland
+Rhenen,0340,20230,447,30,0.58,Utrecht
+Ridderkerk,0597,47710,1308,12,0.43,Zuid-Holland
+Rijssen-Holten,1742,38690,610,46,0.57,Overijssel
+Rijswijk (ZH.),0603,59625,2501,32,0.53,Zuid-Holland
+Roerdalen,1669,20815,372,24,0.72,Limburg
+Roermond,0957,60755,3078,36,0.6,Limburg
+Roosendaal,1674,77550,3722,55,0.54,Noord-Brabant
+Rotterdam,0599,670585,40956,91,0.49,Zuid-Holland
+Rozendaal,0277,1835,343,2,0.95,Gelderland
+Rucphen,0840,23925,615,11,0.58,Noord-Brabant
+Schagen,0441,47760,1199,78,0.66,Noord-Holland
+Scherpenzeel,0279,10345,135,3,0.81,Gelderland
+Schiedam,0606,81835,3796,70,0.41,Zuid-Holland
+Schiermonnikoog,0088,970,33,2,0.09,Friesland
+Schouwen-Duiveland,1676,34655,748,51,0.61,Zeeland
+Simpelveld,0965,10260,203,9,0.55,Limburg
+Sint-Michielsgestel,0845,30105,518,23,0.57,Noord-Brabant
+Sittard-Geleen,1883,92665,3596,37,0.54,Limburg
+Sliedrecht,0610,26265,467,33,0.47,Zuid-Holland
+Sluis,1714,23150,423,35,0.64,Zeeland
+Smallingerland,0090,56660,1657,61,0.5,Friesland
+Soest,0342,47700,1097,29,0.59,Utrecht
+Someren,0847,20190,426,34,0.66,Noord-Brabant
+Son en Breugel,0848,17965,485,8,0.54,Noord-Brabant
+Stadskanaal,0037,32035,749,27,0.56,Groningen
+Staphorst,0180,17750,184,25,0.49,Overijssel
+Stede Broec,0532,22210,448,26,0.52,Noord-Holland
+Steenbergen,0851,24450,520,18,0.63,Noord-Brabant
+Steenwijkerland,1708,45465,799,93,0.72,Overijssel
+Stein (L.),0971,24750,533,13,0.45,Limburg
+Stichtse Vecht,1904,65885,1644,97,0.64,Utrecht
+Súdwest-Fryslân,1900,90430,2032,155,0.79,Friesland
+Terneuzen,0715,55135,1378,41,0.57,Zeeland
+Terschelling,0093,4900,119,16,0.8,Friesland
+Texel,0448,13830,266,13,0.68,Noord-Holland
+Teylingen,1525,38450,997,51,0.61,Zuid-Holland
+Tholen,0716,26855,384,17,0.61,Zeeland
+Tiel,0281,42365,1590,30,0.53,Gelderland
+Tilburg,0855,229865,11214,254,0.57,Noord-Brabant
+Tubbergen,0183,21390,268,29,0.52,Overijssel
+Twenterand,1700,34070,475,27,0.6,Overijssel
+Tynaarlo,1730,34730,520,45,0.74,Drenthe
+Tytsjerksteradiel,0737,32600,545,31,0.72,Friesland
+Uitgeest,0450,13400,325,6,0.42,Noord-Holland
+Uithoorn,0451,31680,830,11,0.58,Noord-Holland
+Urk,0184,21950,344,11,0.46,Flevoland
+Utrecht,0344,374200,21669,111,0.47,Utrecht
+Utrechtse Heuvelrug,1581,50560,1088,33,0.53,Utrecht
+Vaals,0981,10115,239,9,0.81,Limburg
+Valkenburg aan de Geul,0994,16430,530,32,0.77,Limburg
+Valkenswaard,0858,31715,915,20,0.54,Noord-Brabant
+Veendam,0047,27520,848,17,0.61,Groningen
+Veenendaal,0345,69450,1777,38,0.52,Utrecht
+Veere,0717,22070,490,38,0.48,Zeeland
+Veldhoven,0861,46845,1222,17,0.48,Noord-Brabant
+Velsen,0453,69175,1979,63,0.35,Noord-Holland
+Venlo,0983,103800,4901,114,0.65,Limburg
+Venray,0984,44655,1343,32,0.49,Limburg
+Vijfheerenlanden,1961,61705,1299,88,0.51,Utrecht
+Vlaardingen,0622,76435,2808,40,0.53,Zuid-Holland
+Vlieland,0096,1255,81,2,0.16,Friesland
+Vlissingen,0718,45410,1727,42,0.53,Zeeland
+Voerendaal,0986,12385,195,16,0.68,Limburg
+Voorne aan Zee,1992,74310,1726,70,0.49,Zuid-Holland
+Voorschoten,0626,25610,680,12,0.35,Zuid-Holland
+Voorst,0285,25380,480,31,0.69,Gelderland
+Vught,0865,32355,824,23,0.5,Noord-Brabant
+Waadhoeke,1949,46880,776,102,0.59,Friesland
+Waalre,0866,17990,402,5,0.33,Noord-Brabant
+Waalwijk,0867,50305,1224,23,0.48,Noord-Brabant
+Waddinxveen,0627,34000,755,22,0.47,Zuid-Holland
+Wageningen,0289,42595,1200,33,0.54,Gelderland
+Wassenaar,0629,27105,712,21,0.51,Zuid-Holland
+Waterland,0852,17510,336,19,0.52,Noord-Holland
+Weert,0988,51090,1720,38,0.67,Limburg
+West Betuwe,1960,52925,1192,66,0.48,Gelderland
+West Maas en Waal,0668,20325,364,16,0.59,Gelderland
+Westerkwartier,1969,64890,1028,80,0.69,Groningen
+Westerveld,1701,20020,255,45,0.68,Drenthe
+Westervoort,0293,15150,280,6,0.55,Gelderland
+Westerwolde,1950,26445,1110,59,0.82,Groningen
+Westland,1783,115930,2781,77,0.42,Zuid-Holland
+Weststellingwerf,0098,26470,489,64,0.62,Friesland
+Wierden,0189,24915,392,28,0.49,Overijssel
+Wijchen,0296,41565,1037,60,0.64,Gelderland
+Wijdemeren,1696,24605,449,17,0.58,Noord-Holland
+Wijk bij Duurstede,0352,23945,336,18,0.33,Utrecht
+Winterswijk,0294,29235,715,17,0.75,Gelderland
+Woensdrecht,0873,22215,508,16,0.61,Noord-Brabant
+Woerden,0632,53725,1436,31,0.59,Utrecht
+Wormerland,0880,16550,229,14,0.64,Noord-Holland
+Woudenberg,0351,14640,269,12,0.4,Utrecht
+Zaanstad,0479,161390,5200,79,0.53,Noord-Holland
+Zaltbommel,0297,30385,903,27,0.65,Gelderland
+Zandvoort,0473,17475,899,19,0.5,Noord-Holland
+Zeewolde,0050,23890,499,11,0.45,Flevoland
+Zeist,0355,66645,1926,35,0.52,Utrecht
+Zevenaar,0299,45020,875,40,0.58,Gelderland
+Zoetermeer,0637,128440,3849,26,0.48,Zuid-Holland
+Zoeterwoude,0638,9740,191,20,0.42,Zuid-Holland
+Zuidplas,1892,47845,1119,53,0.55,Zuid-Holland
+Zundert,0879,22550,392,11,0.43,Noord-Brabant
+Zutphen,0301,48760,2039,31,0.44,Gelderland
+Zwartewaterland,1896,23455,288,34,0.47,Overijssel
+Zwijndrecht,0642,44895,1301,92,0.54,Zuid-Holland
+Zwolle,0193,133160,5376,78,0.59,Overijssel
