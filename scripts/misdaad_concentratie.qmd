@@ -557,7 +557,14 @@ municipality_random_unweighted_lorenz_ggp <-
   
 municipality_random_unweighted_lorenz_ggp
 # store the plot
-ggsave_svg(ggp = municipality_random_unweighted_lorenz_ggp, output = OUTPUT)
+ggsave_svg(ggp = municipality_random_unweighted_lorenz_ggp, 
+           output = OUTPUT)
+ggsave_jpg(ggp = municipality_random_unweighted_lorenz_ggp,
+           output = OUTPUT,
+           units = "mm",
+           width = 120, height = 60, scale=2)
+
+
 
 # function: plot Lorenz curve for a single municipality ------------------------
 plot_lorenz <- function(municipality) {
@@ -632,7 +639,12 @@ gini_crime_unweighted_histogram_min3nhoods_ggp <-
                  " gemeenten")) +
     theme(rect = element_blank())
 gini_crime_unweighted_histogram_min3nhoods_ggp
-ggsave_svg(ggp = gini_crime_unweighted_histogram_min3nhoods_ggp, output = OUTPUT)
+ggsave_svg(ggp = gini_crime_unweighted_histogram_min3nhoods_ggp, 
+           output = OUTPUT)
+ggsave_jpg(ggp = gini_crime_unweighted_histogram_min3nhoods_ggp,
+           output = OUTPUT,
+           units = "mm",
+           width = 120, height = 60, scale=2)
 
 
 
@@ -752,9 +764,12 @@ map_gini_crime_unweighted_ggp <-
         rect = element_blank())
 map_gini_crime_unweighted_ggp
 
-ggsave_svg(ggp = map_gini_crime_unweighted_ggp, output = OUTPUT)  
-
-
+ggsave_svg(ggp = map_gini_crime_unweighted_ggp, 
+           output = OUTPUT)  
+ggsave_jpg(ggp = map_gini_crime_unweighted_ggp,
+           output = OUTPUT,
+           units = "mm",
+           width = 120, height = 60, scale=2)
 
 regional_above_average_ginis_df <-
   municipality_gini_df |>
@@ -782,6 +797,31 @@ OtherAboveAverage <-
 
 TotalCrimesAnalyzed <-
   crime_2023_df |> ungroup() |> summarize(crime = sum(crime)) |> pull()
+
+
+
+# ------------------------------------------------------------------------------
+
+
+
+
+# Names for the Secondant publication
+file.copy(from = 
+            here("output", "municipality_random_unweighted_lorenz_ggp.jpg"), 
+          to = 
+            here("output", "Figuur_1.jpg"))
+
+file.copy(from = 
+            here("output", "gini_crime_unweighted_histogram_min3nhoods_ggp.jpg"), 
+          to = 
+            here("output", "Figuur_2.jpg"))
+
+file.copy(from = 
+            here("output", "map_gini_crime_unweighted_ggp.jpg"), 
+          to = 
+            here("output", "Figuur_3.jpg"))
+
+
 
 
 
